@@ -1,0 +1,86 @@
+use std::{cmp, fmt};
+
+use self::core::VersionCore;
+use pre_release::VersionPreRelease;
+
+mod common;
+mod core;
+mod pre_release;
+
+#[derive(Eq, PartialEq, PartialOrd)]
+pub struct Version<'a> {
+    pub core: VersionCore,
+    pub pre_release: Option<VersionPreRelease<'a>>,
+    pub build: Option<&'a str>,
+}
+
+impl fmt::Display for Version<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.core)?;
+
+        if let Some(pre_release) = &self.pre_release {
+            write!(f, "{}", pre_release)?;
+        }
+
+        if let Some(build) = self.build {
+            write!(f, "+{}", build)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl<'a> Version<'a> {
+    fn new(
+        core: VersionCore,
+        pre_release: Option<VersionPreRelease<'a>>,
+        build: Option<&'a str>,
+    ) -> Self {
+        Self {
+            core,
+            pre_release,
+            build,
+        }
+    }
+}
+
+#[test]
+fn test_display() {
+    let core = VersionCore::new(1, 2, 3);
+
+    assert_eq!("1.2.3", Version::new(core.clone(), None, None).to_string());
+    assert_eq!(
+        "1.2.3-foo",
+        Version::new(core.clone(), Some(VersionPreRelease("foo")), None).to_string()
+    );
+    assert_eq!(
+        "1.2.3+foo",
+        Version::new(core.clone(), None, Some("foo")).to_string()
+    );
+    assert_eq!(
+        "1.2.3-foo.bar+baz",
+        Version::new(core, Some(VersionPreRelease("foo.bar")), Some("baz")).to_string()
+    );
+}
+
+impl Ord for Version<'_> {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        use cmp::Ordering::*;
+
+        if let ord @ (Less | Greater) = self.core.cmp(&other.core) {
+            return ord;
+        }
+
+        match (&self.pre_release, &other.pre_release) {
+            (None, None) => Equal,
+            (None, Some(_)) => Greater,
+            (Some(_), None) => Less,
+            (Some(pre_release), Some(other_pre_release)) => pre_release.cmp(other_pre_release),
+        }
+    }
+}
+
+#[test]
+fn test_ord() {
+    // TODO
+}

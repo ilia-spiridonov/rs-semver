@@ -1,6 +1,8 @@
 use std::{cmp, fmt};
 
-#[derive(Clone, Debug, PartialEq)]
+use super::common::parse_num_id;
+
+#[derive(Clone, Debug, Eq, PartialEq, PartialOrd)]
 pub struct VersionCore {
     pub major: u32,
     pub minor: u32,
@@ -28,8 +30,8 @@ fn test_display() {
     assert_eq!("1.2.3", VersionCore::new(1, 2, 3).to_string());
 }
 
-impl PartialOrd for VersionCore {
-    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+impl Ord for VersionCore {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
         use cmp::Ordering::*;
 
         for (part, other_part) in [
@@ -37,13 +39,12 @@ impl PartialOrd for VersionCore {
             (self.minor, other.minor),
             (self.patch, other.patch),
         ] {
-            match part.cmp(&other_part) {
-                ord @ (Less | Greater) => return Some(ord),
-                Equal => continue,
-            };
+            if let ord @ (Less | Greater) = part.cmp(&other_part) {
+                return ord;
+            }
         }
 
-        Some(Equal)
+        Equal
     }
 }
 
@@ -60,18 +61,12 @@ impl VersionCore {
         let mut r = s;
         let mut parts = [0_u32; 3];
 
-        for idx in 0..3 {
+        for (idx, part) in parts.iter_mut().enumerate() {
             if idx != 0 {
                 r = r.strip_prefix('.')?;
             }
 
-            let cnt = r.chars().take_while(|c| c.is_ascii_digit()).count();
-            if cnt == 0 || (cnt > 1 && r.starts_with('0')) {
-                return None;
-            }
-
-            parts[idx] = r[..cnt].parse().ok()?;
-            r = &r[cnt..];
+            (*part, r) = parse_num_id(r)?;
         }
 
         Some((Self::new(parts[0], parts[1], parts[2]), r))

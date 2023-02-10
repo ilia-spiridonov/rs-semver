@@ -1,2 +1,3 @@
-pub mod version;
-pub mod version_core;
+pub use version::Version;
+
+mod version;
