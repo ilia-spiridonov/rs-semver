@@ -14,7 +14,6 @@ impl fmt::Display for VersionCore {
 }
 
 impl VersionCore {
-    #[allow(dead_code)]
     fn new(major: u32, minor: u32, patch: u32) -> Self {
         Self {
             major,
@@ -58,12 +57,40 @@ fn test_ord() {
 
 impl VersionCore {
     pub fn parse(s: &str) -> Option<(Self, &str)> {
-        // TODO
-        None
+        let mut r = s;
+        let mut parts = [0_u32; 3];
+
+        for idx in 0..3 {
+            if idx != 0 {
+                r = r.strip_prefix('.')?;
+            }
+
+            let cnt = r.chars().take_while(|c| c.is_ascii_digit()).count();
+            if cnt == 0 || (cnt > 1 && r.starts_with('0')) {
+                return None;
+            }
+
+            parts[idx] = r[..cnt].parse().ok()?;
+            r = &r[cnt..];
+        }
+
+        Some((Self::new(parts[0], parts[1], parts[2]), r))
     }
 }
 
 #[test]
 fn test_parse() {
-    // TODO
+    assert_eq!(None, VersionCore::parse("1"));
+    assert_eq!(None, VersionCore::parse("1."));
+    assert_eq!(None, VersionCore::parse("1.2"));
+    assert_eq!(None, VersionCore::parse("1.2."));
+    assert_eq!(None, VersionCore::parse(".1.2.3"));
+    assert_eq!(None, VersionCore::parse("1..2"));
+    assert_eq!(None, VersionCore::parse("1.2.03"));
+    assert_eq!(None, VersionCore::parse("1.2.f"));
+    assert_eq!(None, VersionCore::parse("1.2.-3"));
+    assert_eq!(
+        Some((VersionCore::new(1, 20, 3), ".")),
+        VersionCore::parse("1.20.3.")
+    );
 }
