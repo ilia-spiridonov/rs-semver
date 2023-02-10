@@ -2,7 +2,7 @@ use std::{cmp, fmt};
 
 use super::common::parse_num_id;
 
-#[derive(Clone, Debug, Eq, PartialEq, PartialOrd)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct VersionCore {
     pub major: u32,
     pub minor: u32,
@@ -30,8 +30,8 @@ fn test_display() {
     assert_eq!("1.2.3", VersionCore::new(1, 2, 3).to_string());
 }
 
-impl Ord for VersionCore {
-    fn cmp(&self, other: &Self) -> cmp::Ordering {
+impl PartialOrd for VersionCore {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         use cmp::Ordering::*;
 
         for (part, other_part) in [
@@ -40,17 +40,16 @@ impl Ord for VersionCore {
             (self.patch, other.patch),
         ] {
             if let ord @ (Less | Greater) = part.cmp(&other_part) {
-                return ord;
+                return Some(ord);
             }
         }
 
-        Equal
+        Some(Equal)
     }
 }
 
 #[test]
 fn test_ord() {
-    assert!(VersionCore::new(1, 2, 3) == VersionCore::new(1, 2, 3));
     assert!(VersionCore::new(0, 1, 2) < VersionCore::new(1, 0, 0));
     assert!(VersionCore::new(1, 1, 2) < VersionCore::new(1, 2, 3));
     assert!(VersionCore::new(1, 1, 2) < VersionCore::new(1, 1, 3));

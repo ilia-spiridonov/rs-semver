@@ -2,7 +2,7 @@ use std::{cmp, fmt};
 
 use super::common::parse_num_id;
 
-#[derive(Debug, Eq, PartialEq, PartialOrd)]
+#[derive(Debug, PartialEq)]
 pub struct VersionPreRelease<'a>(pub &'a str);
 
 impl fmt::Display for VersionPreRelease<'_> {
@@ -16,8 +16,8 @@ fn test_display() {
     assert_eq!("-foo", VersionPreRelease("foo").to_string());
 }
 
-impl Ord for VersionPreRelease<'_> {
-    fn cmp(&self, other: &Self) -> cmp::Ordering {
+impl PartialOrd for VersionPreRelease<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         use cmp::Ordering::*;
 
         let parts = self.0;
@@ -32,18 +32,23 @@ impl Ord for VersionPreRelease<'_> {
             };
 
             if let Less | Greater = ord {
-                return ord;
+                return Some(ord);
             }
         }
 
         parts
             .split('.')
             .count()
-            .cmp(&other_parts.split('.').count())
+            .partial_cmp(&other_parts.split('.').count())
     }
 }
 
 #[test]
 fn test_ord() {
-    // TODO
+    assert!(VersionPreRelease("alpha") < VersionPreRelease("alpha.1"));
+    assert!(VersionPreRelease("alpha.1") < VersionPreRelease("alpha.beta"));
+    assert!(VersionPreRelease("alpha.beta") < VersionPreRelease("beta"));
+    assert!(VersionPreRelease("beta") < VersionPreRelease("beta.2"));
+    assert!(VersionPreRelease("beta.2") < VersionPreRelease("beta.11"));
+    assert!(VersionPreRelease("beta.11") < VersionPreRelease("rc.1"));
 }

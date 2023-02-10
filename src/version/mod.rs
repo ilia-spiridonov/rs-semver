@@ -7,7 +7,7 @@ mod common;
 mod core;
 mod pre_release;
 
-#[derive(Eq, PartialEq, PartialOrd)]
+#[derive(Debug, PartialEq)]
 pub struct Version<'a> {
     pub core: VersionCore,
     pub pre_release: Option<VersionPreRelease<'a>>,
@@ -63,24 +63,65 @@ fn test_display() {
     );
 }
 
-impl Ord for Version<'_> {
-    fn cmp(&self, other: &Self) -> cmp::Ordering {
+impl PartialOrd for Version<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         use cmp::Ordering::*;
 
-        if let ord @ (Less | Greater) = self.core.cmp(&other.core) {
+        if let ord @ Some(Less | Greater) = self.core.partial_cmp(&other.core) {
             return ord;
         }
 
         match (&self.pre_release, &other.pre_release) {
-            (None, None) => Equal,
-            (None, Some(_)) => Greater,
-            (Some(_), None) => Less,
-            (Some(pre_release), Some(other_pre_release)) => pre_release.cmp(other_pre_release),
+            (None, None) => Some(Equal),
+            (None, Some(_)) => Some(Greater),
+            (Some(_), None) => Some(Less),
+            (Some(pre), Some(other_pre)) => pre.partial_cmp(other_pre),
         }
     }
 }
 
 #[test]
 fn test_ord() {
-    // TODO
+    let core = VersionCore::new(1, 0, 0);
+
+    assert!(
+        Version::new(VersionCore::new(0, 1, 2), None, None)
+            < Version::new(VersionCore::new(1, 0, 0), None, None)
+    );
+    assert!(
+        Version::new(VersionCore::new(1, 1, 2), None, None)
+            < Version::new(VersionCore::new(1, 2, 3), None, None)
+    );
+    assert!(
+        Version::new(VersionCore::new(1, 1, 2), None, None)
+            < Version::new(VersionCore::new(1, 1, 3), None, None)
+    );
+    assert!(
+        Version::new(core.clone(), Some(VersionPreRelease("alpha")), None)
+            < Version::new(core.clone(), Some(VersionPreRelease("alpha.1")), None)
+    );
+    assert!(
+        Version::new(core.clone(), Some(VersionPreRelease("alpha.1")), None)
+            < Version::new(core.clone(), Some(VersionPreRelease("alpha.beta")), None)
+    );
+    assert!(
+        Version::new(core.clone(), Some(VersionPreRelease("alpha.beta")), None)
+            < Version::new(core.clone(), Some(VersionPreRelease("beta")), None)
+    );
+    assert!(
+        Version::new(core.clone(), Some(VersionPreRelease("beta")), None)
+            < Version::new(core.clone(), Some(VersionPreRelease("beta.2")), None)
+    );
+    assert!(
+        Version::new(core.clone(), Some(VersionPreRelease("beta.2")), None)
+            < Version::new(core.clone(), Some(VersionPreRelease("beta.11")), None)
+    );
+    assert!(
+        Version::new(core.clone(), Some(VersionPreRelease("beta.11")), None)
+            < Version::new(core.clone(), Some(VersionPreRelease("rc.1")), None)
+    );
+    assert!(
+        Version::new(core.clone(), Some(VersionPreRelease("rc.1")), None)
+            < Version::new(core, None, None)
+    );
 }
