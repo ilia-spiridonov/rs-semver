@@ -1,6 +1,6 @@
 use std::{cmp, fmt};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct VersionCore {
     pub major: u32,
     pub minor: u32,
@@ -14,7 +14,7 @@ impl fmt::Display for VersionCore {
 }
 
 impl VersionCore {
-    fn new(major: u32, minor: u32, patch: u32) -> Self {
+    pub fn new(major: u32, minor: u32, patch: u32) -> Self {
         Self {
             major,
             minor,
