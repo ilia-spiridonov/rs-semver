@@ -1,3 +1,3 @@
-pub use version::Version;
+pub use version::*;
 
 mod version;

@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{cmp, fmt};
 
 use super::common::parse_dot_sep_list;
 
@@ -19,6 +19,20 @@ fn test_to_string() {
 impl PartialEq for VersionBuild<'_> {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
+    }
+}
+
+impl Eq for VersionBuild<'_> {}
+
+impl PartialOrd for VersionBuild<'_> {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for VersionBuild<'_> {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        self.0.cmp(other.0)
     }
 }
 

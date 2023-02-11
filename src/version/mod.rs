@@ -1,10 +1,14 @@
 use std::{cmp, fmt};
 
-use self::{build::VersionBuild, core::VersionCore, pre_release::VersionPreRelease};
+pub use self::{
+    build::VersionBuild, core::VersionCore, increment::VersionIncrement,
+    pre_release::VersionPreRelease,
+};
 
 mod build;
 mod common;
 mod core;
+mod increment;
 mod pre_release;
 
 #[derive(Clone, Debug)]
