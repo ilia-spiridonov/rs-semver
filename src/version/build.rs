@@ -1,6 +1,6 @@
 use std::{cmp, fmt};
 
-use super::common::parse_dot_sep_list;
+use crate::common::parse_dot_sep_list;
 
 #[derive(Clone, Debug)]
 pub struct VersionBuild<'a>(pub &'a str);
@@ -37,7 +37,7 @@ impl Ord for VersionBuild<'_> {
 }
 
 impl<'a> VersionBuild<'a> {
-    pub fn parse(s: &'a str) -> Option<(Option<Self>, &'a str)> {
+    pub(crate) fn parse(s: &'a str) -> Option<(Option<Self>, &'a str)> {
         if let Some(r) = s.strip_prefix('+') {
             parse_dot_sep_list(r, |_| true).map(|(s, r)| (Some(Self(s)), r))
         } else {

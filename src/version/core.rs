@@ -1,6 +1,6 @@
 use std::{cmp, fmt};
 
-use super::common::parse_num_id;
+use crate::common::parse_num_id;
 
 #[derive(Clone, Debug)]
 pub struct VersionCore {
@@ -70,7 +70,7 @@ fn test_cmp() {
 }
 
 impl VersionCore {
-    pub fn parse(s: &str) -> Option<(Self, &str)> {
+    pub(crate) fn parse(s: &str) -> Option<(Self, &str)> {
         let mut r = s;
         let mut parts = [0_u32; 3];
 

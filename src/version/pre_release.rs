@@ -1,6 +1,6 @@
 use std::{cmp, fmt};
 
-use super::common::{parse_dot_sep_list, parse_num_id};
+use crate::common::{parse_dot_sep_list, parse_num_id};
 
 #[derive(Clone, Debug)]
 pub struct VersionPreRelease<'a>(pub &'a str);
@@ -68,7 +68,7 @@ fn test_cmp() {
 }
 
 impl<'a> VersionPreRelease<'a> {
-    pub fn parse(s: &'a str) -> Option<(Option<Self>, &'a str)> {
+    pub(crate) fn parse(s: &'a str) -> Option<(Option<Self>, &'a str)> {
         if let Some(r) = s.strip_prefix('-') {
             parse_dot_sep_list(r, |p| {
                 p.chars().any(|c| !c.is_ascii_digit()) || p.len() == 1 || !p.starts_with('0')
