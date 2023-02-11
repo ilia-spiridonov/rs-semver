@@ -11,12 +11,10 @@ pub enum VersionPattern {
 
 impl fmt::Display for VersionPattern {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use VersionPattern::*;
-
         match self {
-            Major => write!(f, "*"),
-            Minor(major) => write!(f, "{}.*", major),
-            Patch(major, minor) => write!(f, "{}.{}.*", major, minor),
+            Self::Major => write!(f, "*"),
+            Self::Minor(major) => write!(f, "{}.*", major),
+            Self::Patch(major, minor) => write!(f, "{}.{}.*", major, minor),
         }
     }
 }

@@ -1,7 +1,7 @@
 use std::{cmp, fmt};
 
 pub use self::{
-    build::VersionBuild, core::VersionCore, increment::VersionIncrement,
+    build::VersionBuild, core::VersionCore, increment::VersionIncrement, pattern::VersionPattern,
     pre_release::VersionPreRelease,
 };
 
