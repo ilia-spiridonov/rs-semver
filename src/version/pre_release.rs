@@ -2,7 +2,7 @@ use std::{cmp, fmt};
 
 use super::common::parse_num_id;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct VersionPreRelease<'a>(pub &'a str);
 
 impl fmt::Display for VersionPreRelease<'_> {
@@ -16,8 +16,22 @@ fn test_display() {
     assert_eq!("-foo", VersionPreRelease("foo").to_string());
 }
 
+impl PartialEq for VersionPreRelease<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl Eq for VersionPreRelease<'_> {}
+
 impl PartialOrd for VersionPreRelease<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for VersionPreRelease<'_> {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
         use cmp::Ordering::*;
 
         let parts = self.0;
@@ -32,14 +46,14 @@ impl PartialOrd for VersionPreRelease<'_> {
             };
 
             if let Less | Greater = ord {
-                return Some(ord);
+                return ord;
             }
         }
 
         parts
             .split('.')
             .count()
-            .partial_cmp(&other_parts.split('.').count())
+            .cmp(&other_parts.split('.').count())
     }
 }
 

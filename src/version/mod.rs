@@ -7,7 +7,7 @@ mod common;
 mod core;
 mod pre_release;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Version<'a> {
     pub core: VersionCore,
     pub pre_release: Option<VersionPreRelease<'a>>,
@@ -63,19 +63,33 @@ fn test_display() {
     );
 }
 
+impl PartialEq for Version<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.core == other.core && self.pre_release == other.pre_release
+    }
+}
+
+impl Eq for Version<'_> {}
+
 impl PartialOrd for Version<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Version<'_> {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
         use cmp::Ordering::*;
 
-        if let ord @ Some(Less | Greater) = self.core.partial_cmp(&other.core) {
+        if let ord @ (Less | Greater) = self.core.cmp(&other.core) {
             return ord;
         }
 
         match (&self.pre_release, &other.pre_release) {
-            (None, None) => Some(Equal),
-            (None, Some(_)) => Some(Greater),
-            (Some(_), None) => Some(Less),
-            (Some(pre), Some(other_pre)) => pre.partial_cmp(other_pre),
+            (None, None) => Equal,
+            (None, Some(_)) => Greater,
+            (Some(_), None) => Less,
+            (Some(pre), Some(other_pre)) => pre.cmp(other_pre),
         }
     }
 }
