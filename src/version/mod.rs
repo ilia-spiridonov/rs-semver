@@ -144,3 +144,40 @@ fn test_ord() {
             < Version::new(core, None, None)
     );
 }
+
+impl<'a> Version<'a> {
+    /// Attempts to build a semantic version representation from the given slice `s`
+    /// using the rules described on https://semver.org.
+    ///
+    /// Note that it deviates from them slightly by allowing the `v` prefix which is commonly used in practice.
+    ///
+    /// If there are any additional (e.g. whitespace) characters around the version, make sure to trim them beforehand.
+    pub fn from(s: &'a str) -> Option<Self> {
+        let (ver, r) = Self::parse(s)?;
+
+        if r.is_empty() {
+            Some(ver)
+        } else {
+            None
+        }
+    }
+
+    pub(crate) fn parse(s: &'a str) -> Option<(Self, &'a str)> {
+        let r = s.strip_prefix('v').unwrap_or(s);
+        let (core, r) = VersionCore::parse(r)?;
+        let (pre_release, r) = VersionPreRelease::parse(r)?;
+        let (build, r) = VersionBuild::parse(r)?;
+
+        Some((Self::new(core, pre_release, build), r))
+    }
+}
+
+#[test]
+fn test_from() {
+    // TODO
+}
+
+#[test]
+fn test_parse() {
+    // TODO
+}

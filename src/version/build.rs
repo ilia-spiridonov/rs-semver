@@ -23,14 +23,22 @@ impl PartialEq for VersionBuild<'_> {
 }
 
 impl<'a> VersionBuild<'a> {
-    pub fn parse(s: &'a str) -> Option<(Self, &'a str)> {
-        parse_dot_sep_list(s.strip_prefix('+')?, |_| true).map(|(s, r)| (Self(s), r))
+    pub fn parse(s: &'a str) -> Option<(Option<Self>, &'a str)> {
+        if let Some(r) = s.strip_prefix('+') {
+            parse_dot_sep_list(r, |_| true).map(|(s, r)| (Some(Self(s)), r))
+        } else {
+            Some((None, s))
+        }
     }
 }
 
 #[test]
 fn test_parse() {
-    assert_eq!(None, VersionBuild::parse("foo"));
-    assert_eq!(None, VersionBuild::parse("-foo"));
-    assert_eq!(Some((VersionBuild("foo"), "")), VersionBuild::parse("+foo"));
+    assert_eq!(Some((None, "foo")), VersionBuild::parse("foo"));
+    assert_eq!(Some((None, "-foo")), VersionBuild::parse("-foo"));
+    assert_eq!(None, VersionBuild::parse("+"));
+    assert_eq!(
+        Some((Some(VersionBuild("foo")), "")),
+        VersionBuild::parse("+foo")
+    );
 }
