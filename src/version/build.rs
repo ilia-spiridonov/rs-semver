@@ -12,7 +12,7 @@ impl fmt::Display for VersionBuild<'_> {
 }
 
 #[test]
-fn test_display() {
+fn test_to_string() {
     assert_eq!("+foo", VersionBuild("foo").to_string());
 }
 

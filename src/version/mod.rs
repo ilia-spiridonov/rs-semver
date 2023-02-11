@@ -45,7 +45,7 @@ impl<'a> Version<'a> {
 }
 
 #[test]
-fn test_display() {
+fn test_to_string() {
     let core = VersionCore::new(1, 2, 3);
 
     assert_eq!("1.2.3", Version::new(core.clone(), None, None).to_string());
@@ -100,7 +100,17 @@ impl Ord for Version<'_> {
 }
 
 #[test]
-fn test_ord() {
+fn test_eq() {
+    let core = VersionCore::new(1, 0, 0);
+
+    assert_eq!(
+        Version::new(core.clone(), None, None),
+        Version::new(core, None, Some(VersionBuild("foo")))
+    );
+}
+
+#[test]
+fn test_cmp() {
     let core = VersionCore::new(1, 0, 0);
 
     assert!(
@@ -174,10 +184,17 @@ impl<'a> Version<'a> {
 
 #[test]
 fn test_from() {
-    // TODO
+    assert_eq!(None, Version::from("1.2.3 "));
+    assert_eq!(
+        Some(Version::new(VersionCore::new(1, 2, 3), None, None)),
+        Version::from("1.2.3")
+    );
 }
 
 #[test]
 fn test_parse() {
-    // TODO
+    assert_eq!(
+        Some((Version::new(VersionCore::new(1, 2, 3), None, None), " foo")),
+        Version::parse("v1.2.3 foo")
+    );
 }

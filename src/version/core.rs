@@ -26,7 +26,7 @@ impl VersionCore {
 }
 
 #[test]
-fn test_display() {
+fn test_to_string() {
     assert_eq!("1.2.3", VersionCore::new(1, 2, 3).to_string());
 }
 
@@ -63,7 +63,7 @@ impl Ord for VersionCore {
 }
 
 #[test]
-fn test_ord() {
+fn test_cmp() {
     assert!(VersionCore::new(0, 1, 2) < VersionCore::new(1, 0, 0));
     assert!(VersionCore::new(1, 1, 2) < VersionCore::new(1, 2, 3));
     assert!(VersionCore::new(1, 1, 2) < VersionCore::new(1, 1, 3));

@@ -12,7 +12,7 @@ impl fmt::Display for VersionPreRelease<'_> {
 }
 
 #[test]
-fn test_display() {
+fn test_to_string() {
     assert_eq!("-foo", VersionPreRelease("foo").to_string());
 }
 
@@ -58,7 +58,7 @@ impl Ord for VersionPreRelease<'_> {
 }
 
 #[test]
-fn test_ord() {
+fn test_cmp() {
     assert!(VersionPreRelease("alpha") < VersionPreRelease("alpha.1"));
     assert!(VersionPreRelease("alpha.1") < VersionPreRelease("alpha.beta"));
     assert!(VersionPreRelease("alpha.beta") < VersionPreRelease("beta"));
