@@ -3,31 +3,31 @@ use std::fmt;
 use super::common::parse_num_id;
 
 #[derive(Debug, PartialEq)]
-pub struct VersionPattern {
-    major: u32,
-    minor: Option<u32>,
-}
-
-impl VersionPattern {
-    fn new(major: u32, minor: Option<u32>) -> Self {
-        Self { major, minor }
-    }
+pub enum VersionPattern {
+    Major,
+    Minor(u32),
+    Patch(u32, u32),
 }
 
 impl fmt::Display for VersionPattern {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if let Some(minor) = self.minor {
-            write!(f, "{}.{}.*", self.major, minor)
-        } else {
-            write!(f, "{}.*.*", self.major)
+        use VersionPattern::*;
+
+        match self {
+            Major => write!(f, "*"),
+            Minor(major) => write!(f, "{}.*", major),
+            Patch(major, minor) => write!(f, "{}.{}.*", major, minor),
         }
     }
 }
 
 #[test]
 fn test_to_string() {
-    assert_eq!("1.*.*", VersionPattern::new(1, None).to_string());
-    assert_eq!("1.2.*", VersionPattern::new(1, Some(2)).to_string());
+    use VersionPattern::*;
+
+    assert_eq!("*", Major.to_string());
+    assert_eq!("1.*", Minor(1).to_string());
+    assert_eq!("1.2.*", Patch(1, 2).to_string());
 }
 
 impl VersionPattern {
@@ -35,7 +35,7 @@ impl VersionPattern {
         let mut parts = [None::<u32>; 3];
         let mut r = s;
 
-        for (idx, part) in parts.iter_mut().enumerate() {
+        for idx in 0..parts.len() {
             if idx != 0 {
                 if let Some(t) = r.strip_prefix('.') {
                     r = t;
@@ -45,7 +45,11 @@ impl VersionPattern {
             }
 
             if let Some((p, t)) = parse_num_id(r) {
-                *part = Some(p);
+                if idx != 0 && parts[idx - 1].is_none() {
+                    return None;
+                }
+
+                parts[idx] = Some(p);
                 r = t;
                 continue;
             }
@@ -59,7 +63,9 @@ impl VersionPattern {
         }
 
         match parts {
-            [Some(major), minor, None] => Some((Self::new(major, minor), r)),
+            [Some(major), Some(minor), None] => Some((Self::Patch(major, minor), r)),
+            [Some(major), None, None] => Some((Self::Minor(major), r)),
+            [None, None, None] => Some((Self::Major, r)),
             _ => None,
         }
     }
@@ -67,47 +73,22 @@ impl VersionPattern {
 
 #[test]
 fn test_parse() {
+    use VersionPattern::*;
+
     assert_eq!(None, VersionPattern::parse(""));
-    assert_eq!(None, VersionPattern::parse("*"));
+    assert_eq!(Some((Major, "")), VersionPattern::parse("*"));
+    assert_eq!(Some((Major, "")), VersionPattern::parse("x"));
+    assert_eq!(Some((Major, "")), VersionPattern::parse("X"));
     assert_eq!(None, VersionPattern::parse("01"));
-    assert_eq!(
-        Some((VersionPattern::new(1, None), "")),
-        VersionPattern::parse("1")
-    );
+    assert_eq!(Some((Minor(1), "")), VersionPattern::parse("1"));
     assert_eq!(None, VersionPattern::parse("1."));
     assert_eq!(None, VersionPattern::parse("1.?"));
-    assert_eq!(
-        Some((VersionPattern::new(1, None), "")),
-        VersionPattern::parse("1.x")
-    );
-    assert_eq!(
-        Some((VersionPattern::new(1, None), "")),
-        VersionPattern::parse("1.X")
-    );
-    assert_eq!(
-        Some((VersionPattern::new(1, None), "")),
-        VersionPattern::parse("1.*")
-    );
-    assert_eq!(
-        Some((VersionPattern::new(1, None), "*")),
-        VersionPattern::parse("1.**")
-    );
-    assert_eq!(
-        Some((VersionPattern::new(1, None), ".")),
-        VersionPattern::parse("1.*.*.")
-    );
-    assert_eq!(
-        Some((VersionPattern::new(1, Some(2)), "")),
-        VersionPattern::parse("1.2")
-    );
-    assert_eq!(
-        Some((VersionPattern::new(1, Some(2)), "")),
-        VersionPattern::parse("1.2.*")
-    );
+    assert_eq!(Some((Minor(1), "")), VersionPattern::parse("1.*"));
+    assert_eq!(Some((Minor(1), "*")), VersionPattern::parse("1.**"));
+    assert_eq!(Some((Minor(1), ".")), VersionPattern::parse("1.*.*."));
+    assert_eq!(Some((Patch(1, 2), "")), VersionPattern::parse("1.2"));
+    assert_eq!(Some((Patch(1, 2), "")), VersionPattern::parse("1.2.*"));
     assert_eq!(None, VersionPattern::parse("1.2."));
-    assert_eq!(
-        Some((VersionPattern::new(1, Some(2)), "")),
-        VersionPattern::parse("1.2.*")
-    );
+    assert_eq!(Some((Patch(1, 2), "")), VersionPattern::parse("1.2.*"));
     assert_eq!(None, VersionPattern::parse("1.2.3"));
 }

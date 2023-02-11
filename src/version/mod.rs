@@ -9,6 +9,7 @@ mod build;
 mod common;
 mod core;
 mod increment;
+mod pattern;
 mod pre_release;
 
 #[derive(Clone, Debug)]
