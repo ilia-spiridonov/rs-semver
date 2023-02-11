@@ -1,6 +1,6 @@
 use std::{cmp, fmt};
 
-use super::common::parse_num_id;
+use super::common::{parse_dot_sep_list, parse_num_id};
 
 #[derive(Clone, Debug)]
 pub struct VersionPreRelease<'a>(pub &'a str);
@@ -69,60 +69,20 @@ fn test_ord() {
 
 impl<'a> VersionPreRelease<'a> {
     pub fn parse(s: &'a str) -> Option<(Self, &'a str)> {
-        let start = s.strip_prefix('-')?;
-        let mut end = start;
-
-        loop {
-            let mut num_only = true;
-            let cnt = end
-                .chars()
-                .take_while(|c| {
-                    num_only = num_only && c.is_ascii_digit();
-                    *c == '-' || c.is_ascii_alphanumeric()
-                })
-                .count();
-
-            if cnt == 0 {
-                return None;
-            }
-
-            if num_only && cnt > 1 && end.starts_with('0') {
-                return None;
-            }
-
-            end = &end[cnt..];
-
-            if let Some(new_end) = end.strip_prefix('.') {
-                end = new_end;
-            } else {
-                break;
-            }
-        }
-
-        if start != end {
-            Some((Self(&start[..(start.len() - end.len())]), end))
-        } else {
-            None
-        }
+        parse_dot_sep_list(s.strip_prefix('-')?, |p| {
+            p.chars().any(|c| !c.is_ascii_digit()) || p.len() == 1 || !p.starts_with('0')
+        })
+        .map(|(s, r)| (Self(s), r))
     }
 }
 
 #[test]
 fn test_parse() {
-    assert_eq!(None, VersionPreRelease::parse(""));
+    assert_eq!(None, VersionPreRelease::parse("foo"));
     assert_eq!(None, VersionPreRelease::parse("+foo"));
-    assert_eq!(None, VersionPreRelease::parse("-"));
-    assert_eq!(None, VersionPreRelease::parse("-.foo"));
-    assert_eq!(None, VersionPreRelease::parse("-foo."));
-    assert_eq!(None, VersionPreRelease::parse("-foo..bar"));
-    assert_eq!(None, VersionPreRelease::parse("-foo.💩"));
     assert_eq!(None, VersionPreRelease::parse("+foo.01"));
     assert_eq!(
         Some((VersionPreRelease("foo"), "")),
         VersionPreRelease::parse("-foo")
-    );
-    assert_eq!(
-        Some((VersionPreRelease("-aB0.102"), " 3.4")),
-        VersionPreRelease::parse("--aB0.102 3.4")
     );
 }

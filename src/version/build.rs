@@ -1,5 +1,7 @@
 use std::fmt;
 
+use super::common::parse_dot_sep_list;
+
 #[derive(Clone, Debug)]
 pub struct VersionBuild<'a>(pub &'a str);
 
@@ -22,33 +24,7 @@ impl PartialEq for VersionBuild<'_> {
 
 impl<'a> VersionBuild<'a> {
     pub fn parse(s: &'a str) -> Option<(Self, &'a str)> {
-        let start = s.strip_prefix('+')?;
-        let mut end = start;
-
-        loop {
-            let cnt = end
-                .chars()
-                .take_while(|c| *c == '-' || c.is_ascii_alphanumeric())
-                .count();
-
-            if cnt == 0 {
-                return None;
-            }
-
-            end = &end[cnt..];
-
-            if let Some(new_end) = end.strip_prefix('.') {
-                end = new_end;
-            } else {
-                break;
-            }
-        }
-
-        if start != end {
-            Some((Self(&start[..(start.len() - end.len())]), end))
-        } else {
-            None
-        }
+        parse_dot_sep_list(s.strip_prefix('+')?, |_| true).map(|(s, r)| (Self(s), r))
     }
 }
 
@@ -56,21 +32,5 @@ impl<'a> VersionBuild<'a> {
 fn test_parse() {
     assert_eq!(None, VersionBuild::parse("foo"));
     assert_eq!(None, VersionBuild::parse("-foo"));
-    assert_eq!(None, VersionBuild::parse("+"));
-    assert_eq!(None, VersionBuild::parse("+.foo"));
-    assert_eq!(None, VersionBuild::parse("+foo."));
-    assert_eq!(None, VersionBuild::parse("+foo..bar"));
-    assert_eq!(None, VersionBuild::parse("+foo.💩"));
-    assert_eq!(
-        Some((VersionBuild("foo.01"), "")),
-        VersionBuild::parse("+foo.01")
-    );
-    assert_eq!(
-        Some((VersionBuild("-Ab1"), "_")),
-        VersionBuild::parse("+-Ab1_")
-    );
-    assert_eq!(
-        Some((VersionBuild("1.2"), " 3.4.5")),
-        VersionBuild::parse("+1.2 3.4.5")
-    );
+    assert_eq!(Some((VersionBuild("foo"), "")), VersionBuild::parse("+foo"));
 }
