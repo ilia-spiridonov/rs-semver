@@ -1,6 +1,6 @@
 use std::fmt;
 
-use super::common::parse_num_id;
+use super::{common::parse_num_id, Version, VersionCore};
 
 #[derive(Debug, PartialEq)]
 pub enum VersionPattern {
@@ -89,4 +89,28 @@ fn test_parse() {
     assert_eq!(None, VersionPattern::parse("1.2."));
     assert_eq!(Some((Patch(1, 2), "")), VersionPattern::parse("1.2.*"));
     assert_eq!(None, VersionPattern::parse("1.2.3"));
+}
+
+impl VersionPattern {
+    pub(crate) fn to_lower_bound<'a>(&self) -> Version<'a> {
+        match self {
+            Self::Major => Version::new(VersionCore::new(0, 0, 0), None, None),
+            Self::Minor(major) => Version::new(VersionCore::new(*major, 0, 0), None, None),
+            Self::Patch(major, minor) => {
+                Version::new(VersionCore::new(*major, *minor, 0), None, None)
+            }
+        }
+    }
+
+    pub(crate) fn to_upper_bound<'a>(&self) -> Option<Version<'a>> {
+        match self {
+            Self::Major => None,
+            Self::Minor(major) => Some(Version::new(VersionCore::new(major + 1, 0, 0), None, None)),
+            Self::Patch(major, minor) => Some(Version::new(
+                VersionCore::new(*major, minor + 1, 0),
+                None,
+                None,
+            )),
+        }
+    }
 }
