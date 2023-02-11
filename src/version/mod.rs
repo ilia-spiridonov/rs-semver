@@ -35,7 +35,7 @@ impl fmt::Display for Version<'_> {
 }
 
 impl<'a> Version<'a> {
-    fn new(
+    pub fn new(
         core: VersionCore,
         pre_release: Option<VersionPreRelease<'a>>,
         build: Option<VersionBuild<'a>>,
