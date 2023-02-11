@@ -1,6 +1,6 @@
 use std::{cmp, fmt};
 
-use crate::common::parse_dot_sep_list;
+use super::common::parse_dot_sep_list;
 
 #[derive(Clone, Debug)]
 pub struct VersionBuild<'a>(pub &'a str);

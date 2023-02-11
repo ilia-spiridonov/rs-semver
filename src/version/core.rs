@@ -1,6 +1,6 @@
 use std::{cmp, fmt};
 
-use crate::common::parse_num_id;
+use super::common::parse_num_id;
 
 #[derive(Clone, Debug)]
 pub struct VersionCore {

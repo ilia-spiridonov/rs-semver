@@ -6,6 +6,7 @@ pub use self::{
 };
 
 mod build;
+mod common;
 mod core;
 mod increment;
 mod pre_release;

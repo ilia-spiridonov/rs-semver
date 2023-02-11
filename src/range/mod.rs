@@ -1,1 +1,1 @@
-mod pattern;
+pub struct Range {}
