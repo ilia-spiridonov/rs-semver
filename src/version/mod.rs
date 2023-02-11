@@ -1,8 +1,8 @@
 use std::{cmp, fmt};
 
-use self::core::VersionCore;
-use pre_release::VersionPreRelease;
+use self::{build::VersionBuild, core::VersionCore, pre_release::VersionPreRelease};
 
+mod build;
 mod common;
 mod core;
 mod pre_release;
@@ -11,7 +11,7 @@ mod pre_release;
 pub struct Version<'a> {
     pub core: VersionCore,
     pub pre_release: Option<VersionPreRelease<'a>>,
-    pub build: Option<&'a str>,
+    pub build: Option<VersionBuild<'a>>,
 }
 
 impl fmt::Display for Version<'_> {
@@ -22,8 +22,8 @@ impl fmt::Display for Version<'_> {
             write!(f, "{}", pre_release)?;
         }
 
-        if let Some(build) = self.build {
-            write!(f, "+{}", build)?;
+        if let Some(build) = &self.build {
+            write!(f, "{}", build)?;
         }
 
         Ok(())
@@ -34,7 +34,7 @@ impl<'a> Version<'a> {
     fn new(
         core: VersionCore,
         pre_release: Option<VersionPreRelease<'a>>,
-        build: Option<&'a str>,
+        build: Option<VersionBuild<'a>>,
     ) -> Self {
         Self {
             core,
@@ -55,11 +55,16 @@ fn test_display() {
     );
     assert_eq!(
         "1.2.3+foo",
-        Version::new(core.clone(), None, Some("foo")).to_string()
+        Version::new(core.clone(), None, Some(VersionBuild("foo"))).to_string()
     );
     assert_eq!(
         "1.2.3-foo.bar+baz",
-        Version::new(core, Some(VersionPreRelease("foo.bar")), Some("baz")).to_string()
+        Version::new(
+            core,
+            Some(VersionPreRelease("foo.bar")),
+            Some(VersionBuild("baz"))
+        )
+        .to_string()
     );
 }
 
