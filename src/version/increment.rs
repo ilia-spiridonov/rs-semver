@@ -10,6 +10,8 @@ impl Version<'_> {
     /// Increments the version in-place according to the rules described on https://semver.org and depending on `kind`.
     ///
     /// If `drop_pre_release` is `false`, then the version's `pre_release` will be set to `"0"` if it's not `None`.
+    ///
+    /// The version's `build` is always reset to `None`.
     pub fn increment(&mut self, kind: VersionIncrement, drop_pre_release: bool) {
         use VersionIncrement::*;
 
@@ -35,6 +37,8 @@ impl Version<'_> {
                 Some(VersionPreRelease("0"))
             };
         }
+
+        self.build = None;
     }
 }
 
