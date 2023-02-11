@@ -37,11 +37,11 @@ impl<'a> VersionBuild<'a> {
 
             end = &end[cnt..];
 
-            if !end.starts_with('.') {
+            if let Some(new_end) = end.strip_prefix('.') {
+                end = new_end;
+            } else {
                 break;
             }
-
-            end = end.strip_prefix('.')?;
         }
 
         if start != end {
@@ -61,7 +61,10 @@ fn test_parse() {
     assert_eq!(None, VersionBuild::parse("+foo."));
     assert_eq!(None, VersionBuild::parse("+foo..bar"));
     assert_eq!(None, VersionBuild::parse("+foo.💩"));
-    assert_eq!(Some((VersionBuild("foo"), "")), VersionBuild::parse("+foo"));
+    assert_eq!(
+        Some((VersionBuild("foo.01"), "")),
+        VersionBuild::parse("+foo.01")
+    );
     assert_eq!(
         Some((VersionBuild("-Ab1"), "_")),
         VersionBuild::parse("+-Ab1_")
