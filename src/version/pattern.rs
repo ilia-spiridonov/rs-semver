@@ -92,25 +92,21 @@ fn test_parse() {
 }
 
 impl VersionPattern {
-    pub(crate) fn to_lower_bound<'a>(&self) -> Version<'a> {
+    pub(crate) fn to_bounds<'a>(&self) -> (Version<'a>, Option<Version<'a>>) {
         match self {
-            Self::Major => Version::new(VersionCore::new(0, 0, 0), None, None),
-            Self::Minor(major) => Version::new(VersionCore::new(*major, 0, 0), None, None),
-            Self::Patch(major, minor) => {
-                Version::new(VersionCore::new(*major, *minor, 0), None, None)
-            }
-        }
-    }
-
-    pub(crate) fn to_upper_bound<'a>(&self) -> Option<Version<'a>> {
-        match self {
-            Self::Major => None,
-            Self::Minor(major) => Some(Version::new(VersionCore::new(major + 1, 0, 0), None, None)),
-            Self::Patch(major, minor) => Some(Version::new(
-                VersionCore::new(*major, minor + 1, 0),
-                None,
-                None,
-            )),
+            Self::Major => (Version::new(VersionCore::new(0, 0, 0), None, None), None),
+            Self::Minor(major) => (
+                Version::new(VersionCore::new(*major, 0, 0), None, None),
+                Some(Version::new(VersionCore::new(major + 1, 0, 0), None, None)),
+            ),
+            Self::Patch(major, minor) => (
+                Version::new(VersionCore::new(*major, *minor, 0), None, None),
+                Some(Version::new(
+                    VersionCore::new(*major, minor + 1, 0),
+                    None,
+                    None,
+                )),
+            ),
         }
     }
 }
