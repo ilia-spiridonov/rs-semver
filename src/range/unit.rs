@@ -109,6 +109,9 @@ impl<'a> RangeUnit<'a> {
                     }
                     _ => None,
                 },
+                (Some(ParsedComparator::Tilde), (lower, Some(upper))) => {
+                    Some(Self::new((GreaterOrEqual, lower), Some((Less, upper))))
+                }
                 _ => None,
             };
 
@@ -133,16 +136,19 @@ fn test_parse() {
     assert_eq!(">=0.0.0", parse("=*"));
     assert_eq!(">=0.0.0", parse("<=*"));
     assert_eq!(None, RangeUnit::parse("<*"));
+    assert_eq!(None, RangeUnit::parse("~*"));
     // minor pattern, with comparator
     assert_eq!("<1.0.0", parse("<1"));
     assert_eq!("<2.0.0", parse("<=1"));
     assert_eq!(">=1.0.0 <2.0.0", parse("=1"));
     assert_eq!(">=1.0.0", parse(">=1"));
     assert_eq!(">=2.0.0", parse(">1"));
+    assert_eq!(">=1.0.0 <2.0.0", parse("~1"));
     // patch pattern, with comparator
     assert_eq!("<1.2.0", parse("<1.2"));
     assert_eq!("<1.3.0", parse("<=1.2"));
     assert_eq!(">=1.2.0 <1.3.0", parse("=1.2"));
     assert_eq!(">=1.2.0", parse(">=1.2"));
     assert_eq!(">=1.3.0", parse(">1.2"));
+    assert_eq!(">=1.2.0 <1.3.0", parse("~1.2"));
 }
