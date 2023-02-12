@@ -1,7 +1,7 @@
 use std::fmt;
 
 use super::RangeComparator;
-use crate::{Version, VersionPattern};
+use crate::{Version, VersionIncrement, VersionPattern};
 
 type Bound<'a> = (RangeComparator, Version<'a>);
 
@@ -74,8 +74,31 @@ impl<'a> RangeUnit<'a> {
         };
 
         if let Some((ver, t)) = Version::parse(r) {
-            // TODO
-            return None;
+            use RangeComparator::*;
+
+            let unit = match comp {
+                None => Some(Self::new((Equal, ver), None)),
+                Some(ParsedComparator::Simple(comp)) => Some(Self::new((comp, ver), None)),
+                Some(ParsedComparator::Tilde) => {
+                    let mut upper = ver.clone();
+                    upper.increment(VersionIncrement::Minor, false);
+                    Some(Self::new((GreaterOrEqual, ver), Some((Less, upper))))
+                }
+                Some(ParsedComparator::Caret) => {
+                    let inc = match (ver.core.major, ver.core.minor, ver.core.patch) {
+                        (0, 0, _) => VersionIncrement::Patch,
+                        (0, _, _) => VersionIncrement::Minor,
+                        (_, _, _) => VersionIncrement::Major,
+                    };
+
+                    let mut upper = ver.clone();
+                    upper.increment(inc, false);
+
+                    Some(Self::new((GreaterOrEqual, ver), Some((Less, upper))))
+                }
+            };
+
+            return unit.map(|u| (u, t));
         }
 
         if let Some((pat, t)) = VersionPattern::parse(r) {
@@ -126,6 +149,18 @@ impl<'a> RangeUnit<'a> {
 fn test_parse() {
     let parse = |s: &'static str| RangeUnit::parse(s).expect(s).0.to_string();
 
+    // version, no comparator
+    assert_eq!("1.2.3-foo+bar", parse("1.2.3-foo+bar"));
+    // version, with comparator
+    assert_eq!("<1.2.3", parse("<1.2.3"));
+    assert_eq!("<=1.2.3", parse("<=1.2.3"));
+    assert_eq!("1.2.3", parse("=1.2.3"));
+    assert_eq!(">=1.2.3", parse(">=1.2.3"));
+    assert_eq!(">1.2.3", parse(">1.2.3"));
+    assert_eq!(">=1.2.3 <1.3.0", parse("~1.2.3"));
+    assert_eq!(">=1.2.3 <2.0.0", parse("^1.2.3"));
+    assert_eq!(">=0.1.2 <0.2.0", parse("^0.1.2"));
+    assert_eq!(">=0.0.1 <0.0.2", parse("^0.0.1"));
     // pattern, no comparator
     assert_eq!(">=0.0.0", parse("*"));
     assert_eq!(">=1.0.0 <2.0.0", parse("1"));
@@ -137,6 +172,7 @@ fn test_parse() {
     assert_eq!(">=0.0.0", parse("<=*"));
     assert_eq!(None, RangeUnit::parse("<*"));
     assert_eq!(None, RangeUnit::parse("~*"));
+    assert_eq!(None, RangeUnit::parse("^*"));
     // minor pattern, with comparator
     assert_eq!("<1.0.0", parse("<1"));
     assert_eq!("<2.0.0", parse("<=1"));
@@ -144,6 +180,7 @@ fn test_parse() {
     assert_eq!(">=1.0.0", parse(">=1"));
     assert_eq!(">=2.0.0", parse(">1"));
     assert_eq!(">=1.0.0 <2.0.0", parse("~1"));
+    assert_eq!(None, RangeUnit::parse("^1"));
     // patch pattern, with comparator
     assert_eq!("<1.2.0", parse("<1.2"));
     assert_eq!("<1.3.0", parse("<=1.2"));
@@ -151,4 +188,5 @@ fn test_parse() {
     assert_eq!(">=1.2.0", parse(">=1.2"));
     assert_eq!(">=1.3.0", parse(">1.2"));
     assert_eq!(">=1.2.0 <1.3.0", parse("~1.2"));
+    assert_eq!(None, RangeUnit::parse("^1.2"));
 }
