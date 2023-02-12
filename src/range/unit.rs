@@ -58,90 +58,99 @@ fn test_to_string() {
 
 impl<'a> RangeUnit<'a> {
     pub(crate) fn parse(s: &'a str) -> Option<(Self, &'a str)> {
-        let mut r = s;
+        let (comp, r) = Self::parse_comparator(s);
 
-        let comp = if let Some((comp, t)) = RangeComparator::parse(r) {
-            r = t;
-            Some(ParsedComparator::Simple(comp))
-        } else if let Some(t) = r.strip_prefix('^') {
-            r = t;
-            Some(ParsedComparator::Caret)
-        } else if let Some(t) = r.strip_prefix('~') {
-            r = t;
-            Some(ParsedComparator::Tilde)
-        } else {
-            None
-        };
-
-        if let Some((ver, t)) = Version::parse(r) {
-            use RangeComparator::*;
-
-            let unit = match comp {
-                None => Some(Self::new((Equal, ver), None)),
-                Some(ParsedComparator::Simple(comp)) => Some(Self::new((comp, ver), None)),
-                Some(ParsedComparator::Tilde) => {
-                    let mut upper = ver.clone();
-                    upper.increment(VersionIncrement::Minor, false);
-                    Some(Self::new((GreaterOrEqual, ver), Some((Less, upper))))
-                }
-                Some(ParsedComparator::Caret) => {
-                    let inc = match (ver.core.major, ver.core.minor, ver.core.patch) {
-                        (0, 0, _) => VersionIncrement::Patch,
-                        (0, _, _) => VersionIncrement::Minor,
-                        (_, _, _) => VersionIncrement::Major,
-                    };
-
-                    let mut upper = ver.clone();
-                    upper.increment(inc, false);
-
-                    Some(Self::new((GreaterOrEqual, ver), Some((Less, upper))))
-                }
-            };
-
-            return unit.map(|u| (u, t));
+        if let Some((ver, r)) = Version::parse(r) {
+            return Some((Self::from_version(comp, ver), r));
         }
 
-        if let Some((pat, t)) = VersionPattern::parse(r) {
-            use RangeComparator::*;
-
-            let unit = match (comp, pat.to_bounds()) {
-                (None, (lower, upper)) => Some(Self::new(
-                    (GreaterOrEqual, lower),
-                    upper.map(|ver| (Less, ver)),
-                )),
-                (Some(ParsedComparator::Simple(comp)), bounds) => match (comp, bounds) {
-                    (LessOrEqual | Equal | GreaterOrEqual, (lower, None)) => {
-                        Some(Self::new((GreaterOrEqual, lower), None))
-                    }
-                    (comp @ (Greater | GreaterOrEqual), (lower, Some(upper))) => {
-                        let bound = match comp {
-                            Greater => upper,
-                            _ => lower,
-                        };
-                        Some(Self::new((GreaterOrEqual, bound), None))
-                    }
-                    (Equal, (lower, Some(upper))) => {
-                        Some(Self::new((GreaterOrEqual, lower), Some((Less, upper))))
-                    }
-                    (comp @ (Less | LessOrEqual), (lower, Some(upper))) => {
-                        let bound = match comp {
-                            Less => lower,
-                            _ => upper,
-                        };
-                        Some(Self::new((Less, bound), None))
-                    }
-                    _ => None,
-                },
-                (Some(ParsedComparator::Tilde), (lower, Some(upper))) => {
-                    Some(Self::new((GreaterOrEqual, lower), Some((Less, upper))))
-                }
-                _ => None,
-            };
-
-            return unit.map(|u| (u, t));
+        if let Some((pat, r)) = VersionPattern::parse(r) {
+            return Self::from_pattern(comp, pat).map(|u| (u, r));
         }
 
         None
+    }
+
+    fn parse_comparator(s: &str) -> (Option<ParsedComparator>, &str) {
+        use ParsedComparator::*;
+
+        if let Some((comp, r)) = RangeComparator::parse(s) {
+            (Some(Simple(comp)), r)
+        } else if let Some(r) = s.strip_prefix('^') {
+            (Some(Caret), r)
+        } else if let Some(r) = s.strip_prefix('~') {
+            (Some(Tilde), r)
+        } else {
+            (None, s)
+        }
+    }
+
+    fn from_version(comp: Option<ParsedComparator>, ver: Version<'a>) -> Self {
+        use ParsedComparator::*;
+        use RangeComparator::*;
+        use VersionIncrement::*;
+
+        match comp {
+            None => Self::new((Equal, ver), None),
+            Some(Simple(comp)) => Self::new((comp, ver), None),
+            Some(Tilde) => {
+                let mut upper = ver.clone();
+                upper.increment(Minor, false);
+
+                Self::new((GreaterOrEqual, ver), Some((Less, upper)))
+            }
+            Some(Caret) => {
+                let inc = match (ver.core.major, ver.core.minor, ver.core.patch) {
+                    (0, 0, _) => Patch,
+                    (0, _, _) => Minor,
+                    (_, _, _) => Major,
+                };
+
+                let mut upper = ver.clone();
+                upper.increment(inc, false);
+
+                Self::new((GreaterOrEqual, ver), Some((Less, upper)))
+            }
+        }
+    }
+
+    fn from_pattern(comp: Option<ParsedComparator>, pat: VersionPattern) -> Option<Self> {
+        use ParsedComparator::*;
+        use RangeComparator::*;
+
+        match (comp, pat.to_bounds()) {
+            (None, (lower, upper)) => Some(Self::new(
+                (GreaterOrEqual, lower),
+                upper.map(|ver| (Less, ver)),
+            )),
+            (Some(Simple(comp)), bounds) => match (comp, bounds) {
+                (LessOrEqual | Equal | GreaterOrEqual, (lower, None)) => {
+                    Some(Self::new((GreaterOrEqual, lower), None))
+                }
+                (comp @ (Greater | GreaterOrEqual), (lower, Some(upper))) => {
+                    let bound = match comp {
+                        Greater => upper,
+                        _ => lower,
+                    };
+                    Some(Self::new((GreaterOrEqual, bound), None))
+                }
+                (Equal, (lower, Some(upper))) => {
+                    Some(Self::new((GreaterOrEqual, lower), Some((Less, upper))))
+                }
+                (comp @ (Less | LessOrEqual), (lower, Some(upper))) => {
+                    let bound = match comp {
+                        Less => lower,
+                        _ => upper,
+                    };
+                    Some(Self::new((Less, bound), None))
+                }
+                _ => None,
+            },
+            (Some(Tilde), (lower, Some(upper))) => {
+                Some(Self::new((GreaterOrEqual, lower), Some((Less, upper))))
+            }
+            _ => None,
+        }
     }
 }
 
