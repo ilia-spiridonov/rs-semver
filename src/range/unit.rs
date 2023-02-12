@@ -11,6 +11,11 @@ enum ParsedComparator {
     Tilde,
 }
 
+enum ParsedPart<'a> {
+    Version(Version<'a>),
+    Pattern(VersionPattern),
+}
+
 #[derive(Debug, PartialEq)]
 pub struct RangeUnit<'a> {
     pub bound: Bound<'a>,
@@ -59,16 +64,19 @@ fn test_to_string() {
 impl<'a> RangeUnit<'a> {
     pub(crate) fn parse(s: &'a str) -> Option<(Self, &'a str)> {
         let (comp, r) = Self::parse_comparator(s);
+        let (part, r) = Self::parse_part(r)?;
 
-        if let Some((ver, r)) = Version::parse(r) {
-            return Some((Self::from_version(comp, ver), r));
+        if let Some(r) = Self::parse_hyphen(r) {
+            let (second_part, r) = Self::parse_part(r)?;
+
+            if comp.is_some() {
+                return None;
+            }
+
+            return Some((Self::merge_parts(part, second_part), r));
         }
 
-        if let Some((pat, r)) = VersionPattern::parse(r) {
-            return Self::from_pattern(comp, pat).map(|u| (u, r));
-        }
-
-        None
+        Self::from_part(comp, part).map(|u| (u, r))
     }
 
     fn parse_comparator(s: &str) -> (Option<ParsedComparator>, &str) {
@@ -82,6 +90,32 @@ impl<'a> RangeUnit<'a> {
             (Some(Tilde), r)
         } else {
             (None, s)
+        }
+    }
+
+    fn parse_hyphen(s: &str) -> Option<&str> {
+        Some(
+            s.strip_prefix(' ')?
+                .trim_start_matches(' ')
+                .strip_prefix('-')?
+                .trim_start_matches(' '),
+        )
+    }
+
+    fn parse_part(s: &str) -> Option<(ParsedPart, &str)> {
+        if let Some((ver, r)) = Version::parse(s) {
+            Some((ParsedPart::Version(ver), r))
+        } else if let Some((pat, r)) = VersionPattern::parse(s) {
+            Some((ParsedPart::Pattern(pat), r))
+        } else {
+            None
+        }
+    }
+
+    fn from_part(comp: Option<ParsedComparator>, part: ParsedPart<'a>) -> Option<Self> {
+        match part {
+            ParsedPart::Version(ver) => Some(Self::from_version(comp, ver)),
+            ParsedPart::Pattern(pat) => Self::from_pattern(comp, pat),
         }
     }
 
@@ -152,6 +186,28 @@ impl<'a> RangeUnit<'a> {
             _ => None,
         }
     }
+
+    fn merge_parts(first: ParsedPart<'a>, second: ParsedPart<'a>) -> Self {
+        use ParsedPart::*;
+        use RangeComparator::*;
+
+        match (first, second) {
+            (Version(a), Version(b)) => Self::new((GreaterOrEqual, a), Some((LessOrEqual, b))),
+            (Version(ver), Pattern(pat)) => {
+                let (_, upper) = pat.to_bounds();
+                Self::new((GreaterOrEqual, ver), upper.map(|v| (Less, v)))
+            }
+            (Pattern(pat), Version(ver)) => {
+                let (lower, _) = pat.to_bounds();
+                Self::new((GreaterOrEqual, lower), Some((LessOrEqual, ver)))
+            }
+            (Pattern(a), Pattern(b)) => {
+                let (lower, _) = a.to_bounds();
+                let (_, upper) = b.to_bounds();
+                Self::new((GreaterOrEqual, lower), upper.map(|v| (Less, v)))
+            }
+        }
+    }
 }
 
 #[test]
@@ -198,4 +254,14 @@ fn test_parse() {
     assert_eq!(">=1.3.0", parse(">1.2"));
     assert_eq!(">=1.2.0 <1.3.0", parse("~1.2"));
     assert_eq!(None, RangeUnit::parse("^1.2"));
+    // hypen range
+    assert_eq!(">=1.2.3 <=4.5.6", parse("1.2.3 - 4.5.6"));
+    assert_eq!(">=1.2.3 <4.6.0", parse("1.2.3 - 4.5"));
+    assert_eq!(">=1.2.3 <5.0.0", parse("1.2.3 - 4"));
+    assert_eq!(">=1.2.3", parse("1.2.3 - *"));
+    assert_eq!(">=1.2.0 <=3.4.5", parse("1.2 - 3.4.5"));
+    assert_eq!(">=1.2.0 <3.5.0", parse("1.2 - 3.4"));
+    assert_eq!(">=1.0.0 <=3.4.5", parse("1 - 3.4.5"));
+    assert_eq!(">=0.0.0 <=3.4.5", parse("* - 3.4.5"));
+    assert_eq!(None, RangeUnit::parse(">1 - 2"))
 }
