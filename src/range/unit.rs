@@ -128,9 +128,7 @@ impl<'a> RangeUnit<'a> {
             None => Self::new((Equal, ver), None),
             Some(Simple(comp)) => Self::new((comp, ver), None),
             Some(Tilde) => {
-                let mut upper = ver.clone();
-                upper.increment(Minor, false);
-
+                let upper = ver.to_incremented(Minor);
                 Self::new((GreaterOrEqual, ver), Some((Less, upper)))
             }
             Some(Caret) => {
@@ -139,10 +137,7 @@ impl<'a> RangeUnit<'a> {
                     (0, _, _) => Minor,
                     (_, _, _) => Major,
                 };
-
-                let mut upper = ver.clone();
-                upper.increment(inc, false);
-
+                let upper = ver.to_incremented(inc);
                 Self::new((GreaterOrEqual, ver), Some((Less, upper)))
             }
         }

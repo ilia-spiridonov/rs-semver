@@ -65,4 +65,6 @@ fn test_matches() {
     assert!(!matches("1.2.3-0", ">=1.2.2-0"));
     assert!(!matches("1.2.3-0", ">=1.2.3-1"));
     assert!(matches("1.2.3-1", ">=1.2.3-0"));
+    assert!(matches("1.2.3", ">=1.2.3-0"));
+    assert!(matches("1.2.4", ">=1.2.3-0"));
 }

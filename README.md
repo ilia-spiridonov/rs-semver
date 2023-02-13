@@ -20,13 +20,13 @@ Or create manually:
 use rs_semver::{Version, VersionBuild, VersionCore, VersionIncrement, VersionPreRelease};
 
 fn main() {
-    let mut ver = Version::new(
+    let ver = Version::new(
         VersionCore::new(1, 2, 3),
         Some(VersionPreRelease("foo")),
         Some(VersionBuild("bar")),
     );
 
-    ver.increment(VersionIncrement::Major, true);
+    let ver = ver.to_incremented(VersionIncrement::Major);
 
     println!(
         "is {} a pre-release version? {}",
