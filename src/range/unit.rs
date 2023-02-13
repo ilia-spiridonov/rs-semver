@@ -1,9 +1,9 @@
 use std::fmt;
 
-use super::RangeComparator;
-use crate::{Version, VersionIncrement, VersionPattern};
+use super::super::{Version, VersionIncrement, VersionPattern};
+use super::comparator::RangeComparator;
 
-type Bound<'a> = (RangeComparator, Version<'a>);
+pub type RangeBound<'a> = (RangeComparator, Version<'a>);
 
 enum ParsedComparator {
     Simple(RangeComparator),
@@ -18,12 +18,12 @@ enum ParsedPart<'a> {
 
 #[derive(Debug, PartialEq)]
 pub struct RangeUnit<'a> {
-    pub bound: Bound<'a>,
-    pub extra_bound: Option<Bound<'a>>,
+    pub bound: RangeBound<'a>,
+    pub extra_bound: Option<RangeBound<'a>>,
 }
 
 impl<'a> RangeUnit<'a> {
-    pub fn new(bound: Bound<'a>, extra_bound: Option<Bound<'a>>) -> Self {
+    pub fn new(bound: RangeBound<'a>, extra_bound: Option<RangeBound<'a>>) -> Self {
         Self { bound, extra_bound }
     }
 }
@@ -42,7 +42,7 @@ impl fmt::Display for RangeUnit<'_> {
 
 #[test]
 fn test_to_string() {
-    use crate::VersionCore;
+    use super::super::VersionCore;
 
     let ver1 = Version::new(VersionCore::new(1, 2, 3), None, None);
     let ver2 = Version::new(VersionCore::new(4, 5, 6), None, None);

@@ -1,7 +1,5 @@
-pub use comparator::RangeComparator;
-pub use unit::RangeUnit;
-
 mod comparator;
+mod matcher;
 mod unit;
 
 pub struct Range {}
