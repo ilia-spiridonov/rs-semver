@@ -3,6 +3,7 @@ use std::cmp;
 use super::super::Version;
 use super::comparator::RangeComparator;
 use super::unit::{RangeBound, RangeUnit};
+use super::Range;
 
 impl RangeUnit<'_> {
     pub(crate) fn matches(&self, ver: &Version) -> bool {
@@ -33,7 +34,7 @@ impl RangeUnit<'_> {
 
 #[test]
 fn test_matches() {
-    let matches = |v: &str, r: &str| {
+    let matches = |v, r| {
         RangeUnit::parse(r)
             .unwrap()
             .0
@@ -67,4 +68,28 @@ fn test_matches() {
     assert!(matches("1.2.3-1", ">=1.2.3-0"));
     assert!(matches("1.2.3", ">=1.2.3-0"));
     assert!(matches("1.2.4", ">=1.2.3-0"));
+}
+
+impl Range<'_> {
+    pub fn matches(&self, ver: &Version) -> bool {
+        match self {
+            Self::Just(unit) => unit.matches(ver),
+            Self::All(units) => units.iter().all(|u| u.matches(ver)),
+            Self::Any(unit_groups) => unit_groups
+                .iter()
+                .any(|us| us.iter().all(|u| u.matches(ver))),
+        }
+    }
+}
+
+#[test]
+fn test_range_matches() {
+    let matches = |v, r| Range::from(r).unwrap().matches(&Version::from(v).unwrap());
+
+    assert!(matches("1.2.3", ">=1.0.0"));
+    assert!(matches("1.2.3", ">=1.0.0 <2.0.0"));
+    assert!(!matches("2.0.0", ">=1.0.0 <2.0.0"));
+    assert!(matches("2.0.0", ">=2.0.0 || >=1.0.0 <1.5.0"));
+    assert!(matches("1.2.3", ">=2.0.0 || >=1.0.0 <1.5.0"));
+    assert!(!matches("1.5.0", ">=2.0.0 || >=1.0.0 <1.5.0"));
 }
