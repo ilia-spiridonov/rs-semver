@@ -6,6 +6,7 @@ mod comparator;
 mod matcher;
 mod unit;
 
+#[derive(Debug, PartialEq)]
 pub enum Range<'a> {
     Just(RangeUnit<'a>), // allocating for one unit only most of the time would be a waste
     All(Vec<RangeUnit<'a>>),
@@ -71,12 +72,66 @@ fn test_to_string() {
 
 impl<'a> Range<'a> {
     pub fn from(s: &'a str) -> Option<Self> {
-        // TODO
-        None
+        let mut r = s;
+        let mut out = None::<Self>;
+
+        while !r.is_empty() {
+            let (unit, t) = RangeUnit::parse(r.trim_start_matches(' '))?;
+
+            out = match out {
+                None => Some(Self::Just(unit)),
+                Some(Self::Just(prev_unit)) => Some(Self::All(vec![prev_unit, unit])),
+                Some(Self::All(mut units)) => {
+                    units.push(unit);
+                    Some(Self::All(units))
+                }
+                Some(Self::Any(mut unit_groups)) => match unit_groups.last_mut() {
+                    Some(units) => {
+                        units.push(unit);
+                        Some(Self::Any(unit_groups))
+                    }
+                    None => return None,
+                },
+            };
+
+            r = t.trim_start_matches(' ');
+
+            if let Some(t) = r.strip_prefix("||") {
+                r = t;
+                out = match out {
+                    None => return None,
+                    Some(Self::Just(unit)) => Some(Self::Any(vec![vec![unit], vec![]])),
+                    Some(Self::All(units)) => Some(Self::Any(vec![units, vec![]])),
+                    Some(Self::Any(mut unit_groups)) => {
+                        unit_groups.push(vec![]);
+                        Some(Self::Any(unit_groups))
+                    }
+                };
+            }
+        }
+
+        match out {
+            Some(Self::Any(unit_groups)) => match unit_groups.last() {
+                Some(units) if units.is_empty() => None,
+                _ => Some(Self::Any(unit_groups)),
+            },
+            rest => rest,
+        }
     }
 }
 
 #[test]
 fn test_from() {
-    // TODO
+    let parse = |s| Range::from(s).expect(s).to_string();
+
+    assert_eq!(None, Range::from("  "));
+    assert_eq!("1.2.3", parse("1.2.3"));
+    assert_eq!(None, Range::from("1.2.3 ???"));
+    assert_eq!("1.2.3", parse("   1.2.3    "));
+    assert_eq!("1.2.3 <2.0.0", parse("1.2.3 <2.0.0"));
+    assert_eq!("1.2.3 4.5.6 7.8.9", parse("1.2.3 4.5.6 7.8.9"));
+    assert_eq!("1.2.3 || 4.5.6", parse("1.2.3 || 4.5.6"));
+    assert_eq!(None, Range::from("1.2.3 ||"));
+    assert_eq!("1.2.3 4.5.6 || 7.8.9", parse("1.2.3 4.5.6 || 7.8.9"));
+    assert_eq!("1.2.3 || 4.5.6 || 7.8.9", parse("1.2.3 || 4.5.6 || 7.8.9"));
 }

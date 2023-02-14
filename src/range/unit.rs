@@ -207,7 +207,7 @@ impl<'a> RangeUnit<'a> {
 
 #[test]
 fn test_parse() {
-    let parse = |s: &'static str| RangeUnit::parse(s).expect(s).0.to_string();
+    let parse = |s| RangeUnit::parse(s).expect(s).0.to_string();
 
     // version, no comparator
     assert_eq!("1.2.3-foo+bar", parse("1.2.3-foo+bar"));
