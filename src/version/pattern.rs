@@ -1,6 +1,7 @@
 use std::fmt;
 
-use super::{common::parse_num_id, Version, VersionCore};
+use super::common::parse_num_id;
+use super::{Version, VersionCore};
 
 #[derive(Debug, PartialEq)]
 pub enum VersionPattern {

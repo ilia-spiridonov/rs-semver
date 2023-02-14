@@ -1,5 +1,6 @@
 use std::fmt;
 
+pub use comparator::RangeComparator;
 pub use unit::RangeUnit;
 
 mod comparator;

@@ -1,9 +1,10 @@
 use std::{cmp, fmt};
 
-pub use self::{
-    build::VersionBuild, core::VersionCore, increment::VersionIncrement, pattern::VersionPattern,
-    pre_release::VersionPreRelease,
-};
+pub use self::core::VersionCore;
+pub use build::VersionBuild;
+pub use increment::VersionIncrement;
+pub use pattern::VersionPattern;
+pub use pre_release::VersionPreRelease;
 
 mod build;
 mod common;
