@@ -17,18 +17,18 @@ impl RangeUnit<'_> {
     fn matches_bound((comp, bound_ver): &RangeBound, ver: &Version) -> bool {
         use RangeComparator::*;
 
-        if ver.pre_release.is_some() {
-            if bound_ver.pre_release.is_none() || bound_ver.core != ver.core {
-                return false;
-            }
+        if ver.pre_release.is_some()
+            && (bound_ver.pre_release.is_none() || bound_ver.core != ver.core)
+        {
+            return false;
         }
 
-        match (ver.cmp(bound_ver), comp) {
-            (cmp::Ordering::Less, Less | LessOrEqual) => true,
-            (cmp::Ordering::Equal, LessOrEqual | Equal | GreaterOrEqual) => true,
-            (cmp::Ordering::Greater, GreaterOrEqual | Greater) => true,
-            _ => false,
-        }
+        matches!(
+            (ver.cmp(bound_ver), comp),
+            (cmp::Ordering::Less, Less | LessOrEqual)
+                | (cmp::Ordering::Equal, LessOrEqual | Equal | GreaterOrEqual)
+                | (cmp::Ordering::Greater, GreaterOrEqual | Greater)
+        )
     }
 }
 

@@ -20,28 +20,24 @@ impl fmt::Display for Range<'_> {
             Self::All(units) => units
                 .iter()
                 .enumerate()
-                .map(|(idx, unit)| match idx {
+                .try_for_each(|(idx, unit)| match idx {
                     0 => write!(f, "{}", unit),
                     _ => write!(f, " {}", unit),
-                })
-                .collect(),
-            Self::Any(unit_groups) => unit_groups
-                .iter()
-                .enumerate()
-                .map(|(idx, units)| {
+                }),
+            Self::Any(unit_groups) => {
+                unit_groups.iter().enumerate().try_for_each(|(idx, units)| {
                     let prefix = if idx != 0 { write!(f, " || ") } else { Ok(()) };
                     prefix.and_then(|_| {
                         units
                             .iter()
                             .enumerate()
-                            .map(|(idx, unit)| match idx {
+                            .try_for_each(|(idx, unit)| match idx {
                                 0 => write!(f, "{}", unit),
                                 _ => write!(f, " {}", unit),
                             })
-                            .collect()
                     })
                 })
-                .collect(),
+            }
         }
     }
 }
