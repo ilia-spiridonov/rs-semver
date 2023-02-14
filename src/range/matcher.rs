@@ -71,6 +71,11 @@ fn test_matches() {
 }
 
 impl Range<'_> {
+    /// Checks whether the given `ver` satisfies the range.
+    ///
+    /// Note that it follows node-semver's behaviour when it comes to pre-release versions:
+    /// if `ver` has a pre-release tag, it can only be matched by a version that
+    /// also has a pre-release tag AND exactly the same version core.
     pub fn matches(&self, ver: &Version) -> bool {
         match self {
             Self::Just(unit) => unit.matches(ver),

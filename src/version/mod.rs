@@ -117,48 +117,18 @@ fn test_eq() {
 
 #[test]
 fn test_cmp() {
-    let core = VersionCore::new(1, 0, 0);
+    let parse = |s| Version::from(s).expect(s);
 
-    assert!(
-        Version::new(VersionCore::new(0, 1, 2), None, None)
-            < Version::new(VersionCore::new(1, 0, 0), None, None)
-    );
-    assert!(
-        Version::new(VersionCore::new(1, 1, 2), None, None)
-            < Version::new(VersionCore::new(1, 2, 3), None, None)
-    );
-    assert!(
-        Version::new(VersionCore::new(1, 1, 2), None, None)
-            < Version::new(VersionCore::new(1, 1, 3), None, None)
-    );
-    assert!(
-        Version::new(core.clone(), Some(VersionPreRelease("alpha")), None)
-            < Version::new(core.clone(), Some(VersionPreRelease("alpha.1")), None)
-    );
-    assert!(
-        Version::new(core.clone(), Some(VersionPreRelease("alpha.1")), None)
-            < Version::new(core.clone(), Some(VersionPreRelease("alpha.beta")), None)
-    );
-    assert!(
-        Version::new(core.clone(), Some(VersionPreRelease("alpha.beta")), None)
-            < Version::new(core.clone(), Some(VersionPreRelease("beta")), None)
-    );
-    assert!(
-        Version::new(core.clone(), Some(VersionPreRelease("beta")), None)
-            < Version::new(core.clone(), Some(VersionPreRelease("beta.2")), None)
-    );
-    assert!(
-        Version::new(core.clone(), Some(VersionPreRelease("beta.2")), None)
-            < Version::new(core.clone(), Some(VersionPreRelease("beta.11")), None)
-    );
-    assert!(
-        Version::new(core.clone(), Some(VersionPreRelease("beta.11")), None)
-            < Version::new(core.clone(), Some(VersionPreRelease("rc.1")), None)
-    );
-    assert!(
-        Version::new(core.clone(), Some(VersionPreRelease("rc.1")), None)
-            < Version::new(core, None, None)
-    );
+    assert!(parse("0.1.2") < parse("1.0.0"));
+    assert!(parse("1.1.2") < parse("1.2.3"));
+    assert!(parse("1.1.2") < parse("1.1.3"));
+    assert!(parse("1.0.0-alpha") < parse("1.0.0-alpha.1"));
+    assert!(parse("1.0.0-alpha.1") < parse("1.0.0-alpha.beta"));
+    assert!(parse("1.0.0-alpha.beta") < parse("1.0.0-beta"));
+    assert!(parse("1.0.0-beta") < parse("1.0.0-beta.2"));
+    assert!(parse("1.0.0-beta.2") < parse("1.0.0-beta.11"));
+    assert!(parse("1.0.0-beta.11") < parse("1.0.0-rc.1"));
+    assert!(parse("1.0.0-rc.1") < parse("1.0.0"));
 }
 
 impl<'a> Version<'a> {
@@ -199,8 +169,14 @@ fn test_from() {
 
 #[test]
 fn test_parse() {
-    assert_eq!(
-        Some((Version::new(VersionCore::new(1, 2, 3), None, None), " foo")),
-        Version::parse("v1.2.3 foo")
-    );
+    let parse = |s| Version::parse(s).expect(s).0.to_string();
+
+    assert_eq!("1.2.3", parse("v1.2.3"));
+    assert_eq!("1.2.3-foo.bar.0", parse("1.2.3-foo.bar.0"));
+    assert_eq!("1.2.3+foo.01", parse("1.2.3+foo.01"));
+    assert_eq!("1.2.3-foo+bar", parse("1.2.3-foo+bar"));
+    assert_eq!(None, Version::parse("v"));
+    assert_eq!(None, Version::parse("-foo"));
+    assert_eq!(None, Version::parse("+foo"));
+    assert_eq!(None, Version::parse("+foo-bar"));
 }
