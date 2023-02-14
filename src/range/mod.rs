@@ -68,6 +68,13 @@ fn test_to_string() {
 }
 
 impl<'a> Range<'a> {
+    /// Attempts to parse a `node-semver`-like version range into a representation that can be matched against.
+    ///
+    /// Note that it is significantly stricter than the reference algorithm used by that library,
+    /// and will reject many ambiguous inputs.
+    ///
+    /// Also note that it will not add the `0` pre-release tag to versions with certain comparators,
+    /// since it's unnecessary due to the way the matching algorithm is implemented.
     pub fn from(s: &'a str) -> Option<Self> {
         let mut r = s;
         let mut out = None::<Self>;
