@@ -76,7 +76,7 @@ impl Range<'_> {
     /// Note that it follows node-semver's behaviour when it comes to pre-release versions:
     /// if `ver` has a pre-release tag, it can only be matched by a version that
     /// also has a pre-release tag AND exactly the same version core.
-    pub fn matches(&self, ver: &Version) -> bool {
+    pub fn is_satisfied_by(&self, ver: &Version) -> bool {
         match self {
             Self::Just(unit) => unit.matches(ver),
             Self::All(units) => units.iter().all(|u| u.matches(ver)),
@@ -88,13 +88,17 @@ impl Range<'_> {
 }
 
 #[test]
-fn test_range_matches() {
-    let matches = |v, r| Range::from(r).unwrap().matches(&Version::from(v).unwrap());
+fn test_range_is_satisfied_by() {
+    let test = |v, r| {
+        Range::from(r)
+            .unwrap()
+            .is_satisfied_by(&Version::from(v).unwrap())
+    };
 
-    assert!(matches("1.2.3", ">=1.0.0"));
-    assert!(matches("1.2.3", ">=1.0.0 <2.0.0"));
-    assert!(!matches("2.0.0", ">=1.0.0 <2.0.0"));
-    assert!(matches("2.0.0", ">=2.0.0 || >=1.0.0 <1.5.0"));
-    assert!(matches("1.2.3", ">=2.0.0 || >=1.0.0 <1.5.0"));
-    assert!(!matches("1.5.0", ">=2.0.0 || >=1.0.0 <1.5.0"));
+    assert!(test("1.2.3", ">=1.0.0"));
+    assert!(test("1.2.3", ">=1.0.0 <2.0.0"));
+    assert!(!test("2.0.0", ">=1.0.0 <2.0.0"));
+    assert!(test("2.0.0", ">=2.0.0 || >=1.0.0 <1.5.0"));
+    assert!(test("1.2.3", ">=2.0.0 || >=1.0.0 <1.5.0"));
+    assert!(!test("1.5.0", ">=2.0.0 || >=1.0.0 <1.5.0"));
 }

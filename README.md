@@ -67,6 +67,6 @@ fn main() {
 
     let ver = Version::from("1.0.0").unwrap();
 
-    println!("does {} match {}? {}", ver, range, range.matches(&ver));
+    println!("does {} match {}? {}", ver, range, range.is_satisfied_by(&ver));
 }
 ```
