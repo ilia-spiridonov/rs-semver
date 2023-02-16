@@ -1,5 +1,5 @@
 # rs-semver
-Set of utilities for dealing with semantic versions (see semver.org) written in pure Rust
+Tools for dealing with semantic versions (see [semver.org](https://semver.org/))
 
 ## Version
 Import `Version` to manipulate Semantic Versions. Parse from a slice:
