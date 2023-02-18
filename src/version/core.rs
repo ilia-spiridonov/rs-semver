@@ -2,7 +2,7 @@ use std::{cmp, fmt};
 
 use super::common::parse_num_id;
 
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct VersionCore {
     pub major: u32,
     pub minor: u32,
@@ -29,14 +29,6 @@ impl VersionCore {
 fn test_to_string() {
     assert_eq!("1.2.3", VersionCore::new(1, 2, 3).to_string());
 }
-
-impl PartialEq for VersionCore {
-    fn eq(&self, other: &Self) -> bool {
-        self.major == other.major && self.minor == other.minor && self.patch == other.patch
-    }
-}
-
-impl Eq for VersionCore {}
 
 impl PartialOrd for VersionCore {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {

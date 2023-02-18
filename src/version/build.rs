@@ -2,7 +2,7 @@ use std::{cmp, fmt};
 
 use super::common::parse_dot_sep_list;
 
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct VersionBuild<'a>(pub &'a str);
 
 impl fmt::Display for VersionBuild<'_> {
@@ -15,14 +15,6 @@ impl fmt::Display for VersionBuild<'_> {
 fn test_to_string() {
     assert_eq!("+foo", VersionBuild("foo").to_string());
 }
-
-impl PartialEq for VersionBuild<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
-    }
-}
-
-impl Eq for VersionBuild<'_> {}
 
 impl PartialOrd for VersionBuild<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {

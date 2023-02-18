@@ -2,7 +2,7 @@ use std::{cmp, fmt};
 
 use super::common::{parse_dot_sep_list, parse_num_id};
 
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct VersionPreRelease<'a>(pub &'a str);
 
 impl fmt::Display for VersionPreRelease<'_> {
@@ -15,14 +15,6 @@ impl fmt::Display for VersionPreRelease<'_> {
 fn test_to_string() {
     assert_eq!("-foo", VersionPreRelease("foo").to_string());
 }
-
-impl PartialEq for VersionPreRelease<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
-    }
-}
-
-impl Eq for VersionPreRelease<'_> {}
 
 impl PartialOrd for VersionPreRelease<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
