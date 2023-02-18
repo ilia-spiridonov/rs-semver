@@ -6,15 +6,16 @@ use super::unit::{RangeBound, RangeUnit};
 use super::Range;
 
 impl RangeUnit<'_> {
-    pub(crate) fn matches(&self, ver: &Version) -> bool {
+    pub(crate) fn is_satisfied_by(&self, ver: &Version) -> bool {
         if let Some(extra_bound) = &self.extra_bound {
-            Self::matches_bound(&self.bound, ver) && Self::matches_bound(extra_bound, ver)
+            Self::is_bound_satisfied_by(&self.bound, ver)
+                && Self::is_bound_satisfied_by(extra_bound, ver)
         } else {
-            Self::matches_bound(&self.bound, ver)
+            Self::is_bound_satisfied_by(&self.bound, ver)
         }
     }
 
-    fn matches_bound((comp, bound_ver): &RangeBound, ver: &Version) -> bool {
+    fn is_bound_satisfied_by((comp, bound_ver): &RangeBound, ver: &Version) -> bool {
         use RangeComparator::*;
 
         if ver.pre_release.is_some()
@@ -33,41 +34,41 @@ impl RangeUnit<'_> {
 }
 
 #[test]
-fn test_matches() {
-    let matches = |v, r| {
+fn test_range_unit_is_satisfied_by() {
+    let test = |v, r| {
         RangeUnit::parse(r)
             .unwrap()
             .0
-            .matches(&Version::from(v).unwrap())
+            .is_satisfied_by(&Version::from(v).unwrap())
     };
 
-    assert!(matches("1.2.4", ">1.2.3"));
-    assert!(!matches("1.2.3", ">1.2.3"));
-    assert!(!matches("1.2.2", ">1.2.3"));
+    assert!(test("1.2.4", ">1.2.3"));
+    assert!(!test("1.2.3", ">1.2.3"));
+    assert!(!test("1.2.2", ">1.2.3"));
 
-    assert!(matches("1.2.4", ">=1.2.3"));
-    assert!(matches("1.2.3", ">=1.2.3"));
-    assert!(!matches("1.2.2", ">=1.2.3"));
+    assert!(test("1.2.4", ">=1.2.3"));
+    assert!(test("1.2.3", ">=1.2.3"));
+    assert!(!test("1.2.2", ">=1.2.3"));
 
-    assert!(!matches("1.2.4", "=1.2.3"));
-    assert!(matches("1.2.3", "=1.2.3"));
-    assert!(!matches("1.2.2", "=1.2.3"));
+    assert!(!test("1.2.4", "=1.2.3"));
+    assert!(test("1.2.3", "=1.2.3"));
+    assert!(!test("1.2.2", "=1.2.3"));
 
-    assert!(!matches("1.2.4", "<=1.2.3"));
-    assert!(matches("1.2.3", "<=1.2.3"));
-    assert!(matches("1.2.2", "<=1.2.3"));
+    assert!(!test("1.2.4", "<=1.2.3"));
+    assert!(test("1.2.3", "<=1.2.3"));
+    assert!(test("1.2.2", "<=1.2.3"));
 
-    assert!(!matches("1.2.4", "<1.2.3"));
-    assert!(!matches("1.2.3", "<1.2.3"));
-    assert!(matches("1.2.2", "<1.2.3"));
+    assert!(!test("1.2.4", "<1.2.3"));
+    assert!(!test("1.2.3", "<1.2.3"));
+    assert!(test("1.2.2", "<1.2.3"));
 
     // with pre-release
-    assert!(!matches("1.2.4-0", ">=1.2.3"));
-    assert!(!matches("1.2.3-0", ">=1.2.2-0"));
-    assert!(!matches("1.2.3-0", ">=1.2.3-1"));
-    assert!(matches("1.2.3-1", ">=1.2.3-0"));
-    assert!(matches("1.2.3", ">=1.2.3-0"));
-    assert!(matches("1.2.4", ">=1.2.3-0"));
+    assert!(!test("1.2.4-0", ">=1.2.3"));
+    assert!(!test("1.2.3-0", ">=1.2.2-0"));
+    assert!(!test("1.2.3-0", ">=1.2.3-1"));
+    assert!(test("1.2.3-1", ">=1.2.3-0"));
+    assert!(test("1.2.3", ">=1.2.3-0"));
+    assert!(test("1.2.4", ">=1.2.3-0"));
 }
 
 impl Range<'_> {
@@ -78,11 +79,11 @@ impl Range<'_> {
     /// also has a pre-release tag AND exactly the same version core.
     pub fn is_satisfied_by(&self, ver: &Version) -> bool {
         match self {
-            Self::Just(unit) => unit.matches(ver),
-            Self::All(units) => units.iter().all(|u| u.matches(ver)),
+            Self::Just(unit) => unit.is_satisfied_by(ver),
+            Self::All(units) => units.iter().all(|u| u.is_satisfied_by(ver)),
             Self::Any(unit_groups) => unit_groups
                 .iter()
-                .any(|us| us.iter().all(|u| u.matches(ver))),
+                .any(|us| us.iter().all(|u| u.is_satisfied_by(ver))),
         }
     }
 }
