@@ -2,7 +2,7 @@ use std::{cmp, fmt};
 
 use super::common::parse_dot_sep_list;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct VersionBuild<'a>(pub &'a str);
 
 impl fmt::Display for VersionBuild<'_> {

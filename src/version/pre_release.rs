@@ -2,7 +2,7 @@ use std::{cmp, fmt};
 
 use super::common::{parse_dot_sep_list, parse_num_id};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct VersionPreRelease<'a>(pub &'a str);
 
 impl fmt::Display for VersionPreRelease<'_> {

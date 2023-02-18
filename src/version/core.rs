@@ -2,7 +2,7 @@ use std::{cmp, fmt};
 
 use super::common::parse_num_id;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct VersionCore {
     pub major: u32,
     pub minor: u32,

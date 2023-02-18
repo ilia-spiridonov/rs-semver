@@ -13,7 +13,7 @@ mod increment;
 mod pattern;
 mod pre_release;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct Version<'a> {
     pub core: VersionCore,
     pub pre_release: Option<VersionPreRelease<'a>>,
