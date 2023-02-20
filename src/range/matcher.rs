@@ -5,7 +5,7 @@ use super::comparator::RangeComparator;
 use super::unit::{RangeBound, RangeUnit};
 use super::Range;
 
-impl RangeUnit<'_> {
+impl RangeUnit {
     pub(crate) fn is_satisfied_by(&self, ver: &Version) -> bool {
         if let Some(extra_bound) = &self.extra_bound {
             Self::is_bound_satisfied_by(&self.bound, ver)
@@ -71,7 +71,7 @@ fn test_range_unit_is_satisfied_by() {
     assert!(test("1.2.4", ">=1.2.3-0"));
 }
 
-impl Range<'_> {
+impl Range {
     /// Checks whether the given `ver` satisfies the range.
     ///
     /// Note that it follows node-semver's behaviour when it comes to pre-release versions:

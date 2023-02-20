@@ -93,7 +93,7 @@ fn test_parse() {
 }
 
 impl VersionPattern {
-    pub(crate) fn to_bounds<'a>(&self) -> (Version<'a>, Option<Version<'a>>) {
+    pub(crate) fn to_bounds(&self) -> (Version, Option<Version>) {
         match self {
             Self::Major => (Version::new(VersionCore::new(0, 0, 0), None, None), None),
             Self::Minor(major) => (

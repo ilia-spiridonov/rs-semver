@@ -3,7 +3,7 @@ use std::fmt;
 use super::super::{Version, VersionIncrement, VersionPattern};
 use super::comparator::RangeComparator;
 
-pub type RangeBound<'a> = (RangeComparator, Version<'a>);
+pub type RangeBound = (RangeComparator, Version);
 
 enum ParsedComparator {
     Simple(RangeComparator),
@@ -11,24 +11,24 @@ enum ParsedComparator {
     Tilde,
 }
 
-enum ParsedPart<'a> {
-    Version(Version<'a>),
+enum ParsedPart {
+    Version(Version),
     Pattern(VersionPattern),
 }
 
 #[derive(Debug, PartialEq)]
-pub struct RangeUnit<'a> {
-    pub bound: RangeBound<'a>,
-    pub extra_bound: Option<RangeBound<'a>>,
+pub struct RangeUnit {
+    pub bound: RangeBound,
+    pub extra_bound: Option<RangeBound>,
 }
 
-impl<'a> RangeUnit<'a> {
-    pub fn new(bound: RangeBound<'a>, extra_bound: Option<RangeBound<'a>>) -> Self {
+impl RangeUnit {
+    pub fn new(bound: RangeBound, extra_bound: Option<RangeBound>) -> Self {
         Self { bound, extra_bound }
     }
 }
 
-impl fmt::Display for RangeUnit<'_> {
+impl fmt::Display for RangeUnit {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let (comp, ver) = &self.bound;
 
@@ -61,8 +61,8 @@ fn test_to_string() {
     );
 }
 
-impl<'a> RangeUnit<'a> {
-    pub(crate) fn parse(s: &'a str) -> Option<(Self, &'a str)> {
+impl RangeUnit {
+    pub(crate) fn parse(s: &str) -> Option<(Self, &str)> {
         let (comp, r) = Self::parse_comparator(s);
         let (part, r) = Self::parse_part(r)?;
 
@@ -112,14 +112,14 @@ impl<'a> RangeUnit<'a> {
         }
     }
 
-    fn from_part(comp: Option<ParsedComparator>, part: ParsedPart<'a>) -> Option<Self> {
+    fn from_part(comp: Option<ParsedComparator>, part: ParsedPart) -> Option<Self> {
         match part {
             ParsedPart::Version(ver) => Some(Self::from_version(comp, ver)),
             ParsedPart::Pattern(pat) => Self::from_pattern(comp, pat),
         }
     }
 
-    fn from_version(comp: Option<ParsedComparator>, ver: Version<'a>) -> Self {
+    fn from_version(comp: Option<ParsedComparator>, ver: Version) -> Self {
         use ParsedComparator::*;
         use RangeComparator::*;
         use VersionIncrement::*;
@@ -182,7 +182,7 @@ impl<'a> RangeUnit<'a> {
         }
     }
 
-    fn merge_parts(first: ParsedPart<'a>, second: ParsedPart<'a>) -> Self {
+    fn merge_parts(first: ParsedPart, second: ParsedPart) -> Self {
         use ParsedPart::*;
         use RangeComparator::*;
 

@@ -14,13 +14,13 @@ mod pattern;
 mod pre_release;
 
 #[derive(Clone, Debug, Hash)]
-pub struct Version<'a> {
+pub struct Version {
     pub core: VersionCore,
-    pub pre_release: Option<VersionPreRelease<'a>>,
-    pub build: Option<VersionBuild<'a>>,
+    pub pre_release: Option<VersionPreRelease>,
+    pub build: Option<VersionBuild>,
 }
 
-impl fmt::Display for Version<'_> {
+impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.core)?;
 
@@ -36,11 +36,11 @@ impl fmt::Display for Version<'_> {
     }
 }
 
-impl<'a> Version<'a> {
+impl Version {
     pub fn new(
         core: VersionCore,
-        pre_release: Option<VersionPreRelease<'a>>,
-        build: Option<VersionBuild<'a>>,
+        pre_release: Option<VersionPreRelease>,
+        build: Option<VersionBuild>,
     ) -> Self {
         Self {
             core,
@@ -57,38 +57,51 @@ fn test_to_string() {
     assert_eq!("1.2.3", Version::new(core.clone(), None, None).to_string());
     assert_eq!(
         "1.2.3-foo",
-        Version::new(core.clone(), Some(VersionPreRelease("foo")), None).to_string()
+        Version::new(
+            core.clone(),
+            Some(VersionPreRelease(vec!["foo".to_string()])),
+            None
+        )
+        .to_string()
     );
     assert_eq!(
         "1.2.3+foo",
-        Version::new(core.clone(), None, Some(VersionBuild("foo"))).to_string()
+        Version::new(
+            core.clone(),
+            None,
+            Some(VersionBuild(vec!["foo".to_string()]))
+        )
+        .to_string()
     );
     assert_eq!(
         "1.2.3-foo.bar+baz",
         Version::new(
             core,
-            Some(VersionPreRelease("foo.bar")),
-            Some(VersionBuild("baz"))
+            Some(VersionPreRelease(vec![
+                "foo".to_string(),
+                "bar".to_string()
+            ])),
+            Some(VersionBuild(vec!["baz".to_string()]))
         )
         .to_string()
     );
 }
 
-impl PartialEq for Version<'_> {
+impl PartialEq for Version {
     fn eq(&self, other: &Self) -> bool {
         self.core == other.core && self.pre_release == other.pre_release
     }
 }
 
-impl Eq for Version<'_> {}
+impl Eq for Version {}
 
-impl PartialOrd for Version<'_> {
+impl PartialOrd for Version {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for Version<'_> {
+impl Ord for Version {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
         use cmp::Ordering::*;
 
@@ -111,7 +124,7 @@ fn test_eq() {
 
     assert_eq!(
         Version::new(core.clone(), None, None),
-        Version::new(core, None, Some(VersionBuild("foo")))
+        Version::new(core, None, Some(VersionBuild(vec!["foo".to_string()])))
     );
 }
 
@@ -131,14 +144,14 @@ fn test_cmp() {
     assert!(parse("1.0.0-rc.1") < parse("1.0.0"));
 }
 
-impl<'a> Version<'a> {
+impl Version {
     /// Attempts to build a semantic version representation from the given slice `s`
     /// using the rules described on https://semver.org.
     ///
     /// Note that it deviates from them slightly by allowing the `v` prefix which is commonly used in practice.
     ///
     /// If there are any additional (e.g. whitespace) characters around the version, make sure to trim them beforehand.
-    pub fn from(s: &'a str) -> Option<Self> {
+    pub fn from(s: &str) -> Option<Self> {
         let (ver, r) = Self::parse(s)?;
 
         if r.is_empty() {
@@ -148,7 +161,7 @@ impl<'a> Version<'a> {
         }
     }
 
-    pub(crate) fn parse(s: &'a str) -> Option<(Self, &'a str)> {
+    pub(crate) fn parse(s: &str) -> Option<(Self, &str)> {
         let r = s.strip_prefix('v').unwrap_or(s);
         let (core, r) = VersionCore::parse(r)?;
         let (pre_release, r) = VersionPreRelease::parse(r)?;

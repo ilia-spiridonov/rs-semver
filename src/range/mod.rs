@@ -8,13 +8,13 @@ mod matcher;
 mod unit;
 
 #[derive(Debug, PartialEq)]
-pub enum Range<'a> {
-    Just(RangeUnit<'a>), // allocating for one unit only most of the time would be a waste
-    All(Vec<RangeUnit<'a>>),
-    Any(Vec<Vec<RangeUnit<'a>>>),
+pub enum Range {
+    Just(RangeUnit), // allocating for one unit only most of the time would be a waste
+    All(Vec<RangeUnit>),
+    Any(Vec<Vec<RangeUnit>>),
 }
 
-impl fmt::Display for Range<'_> {
+impl fmt::Display for Range {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Just(unit) => write!(f, "{}", unit),
@@ -67,7 +67,7 @@ fn test_to_string() {
     );
 }
 
-impl<'a> Range<'a> {
+impl Range {
     /// Attempts to parse a `node-semver`-like version range into a representation that can be matched against.
     ///
     /// Note that it is significantly stricter than the reference algorithm used by that library,
@@ -75,7 +75,7 @@ impl<'a> Range<'a> {
     ///
     /// Also note that it will not add the `0` pre-release tag to versions with certain comparators,
     /// since it's unnecessary due to the way the matching algorithm is implemented.
-    pub fn from(s: &'a str) -> Option<Self> {
+    pub fn from(s: &str) -> Option<Self> {
         let mut r = s;
         let mut out = None::<Self>;
 

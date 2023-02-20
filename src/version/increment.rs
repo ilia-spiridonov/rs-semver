@@ -6,7 +6,7 @@ pub enum VersionIncrement {
     Patch,
 }
 
-impl Version<'_> {
+impl Version {
     /// Increments the version according to the rules described on https://semver.org and depending on `inc`.
     ///
     /// The incremented version's `pre_release` and `build` will always be set to `None`.
