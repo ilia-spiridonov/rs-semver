@@ -1,4 +1,4 @@
-use std::{cmp, fmt};
+use std::{cmp, fmt, hash};
 
 pub use self::core::VersionCore;
 pub use build::VersionBuild;
@@ -13,7 +13,7 @@ mod increment;
 mod pattern;
 mod pre_release;
 
-#[derive(Clone, Debug, Hash)]
+#[derive(Clone, Debug)]
 pub struct Version {
     pub core: VersionCore,
     pub pre_release: Option<VersionPreRelease>,
@@ -85,6 +85,13 @@ fn test_to_string() {
         )
         .to_string()
     );
+}
+
+impl hash::Hash for Version {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.core.hash(state);
+        self.pre_release.hash(state);
+    }
 }
 
 impl PartialEq for Version {
