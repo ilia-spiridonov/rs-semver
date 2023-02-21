@@ -3,20 +3,17 @@ use std::{cmp, fmt};
 use super::common::{parse_dot_sep_list, parse_num_id};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct VersionPreRelease(pub Vec<String>);
+pub struct VersionPreRelease(pub String);
 
 impl fmt::Display for VersionPreRelease {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "-{}", self.0.join("."))
+        write!(f, "-{}", self.0)
     }
 }
 
 #[test]
 fn test_to_string() {
-    assert_eq!(
-        "-foo.bar",
-        VersionPreRelease(vec!["foo".to_string(), "bar".to_string()]).to_string()
-    );
+    assert_eq!("-foo", VersionPreRelease("foo".to_string()).to_string());
 }
 
 impl PartialOrd for VersionPreRelease {
@@ -32,7 +29,7 @@ impl Ord for VersionPreRelease {
         let parts = &self.0;
         let other_parts = &other.0;
 
-        for (part, other_part) in parts.iter().zip(other_parts.iter()) {
+        for (part, other_part) in parts.split('.').zip(other_parts.split('.')) {
             let ord = match (parse_num_id(part), parse_num_id(other_part)) {
                 (Some((_, "")), None) => Less,
                 (None, Some((_, ""))) => Greater,
@@ -45,20 +42,21 @@ impl Ord for VersionPreRelease {
             }
         }
 
-        parts.len().cmp(&other_parts.len())
+        parts
+            .split('.')
+            .count()
+            .cmp(&other_parts.split('.').count())
     }
 }
 
 #[test]
 fn test_cmp() {
-    let parse = |s: &str| s.split('.').map(|t| String::from(t)).collect();
-
-    assert!(VersionPreRelease(parse("alpha")) < VersionPreRelease(parse("alpha.1")));
-    assert!(VersionPreRelease(parse("alpha.1")) < VersionPreRelease(parse("alpha.beta")));
-    assert!(VersionPreRelease(parse("alpha.beta")) < VersionPreRelease(parse("beta")));
-    assert!(VersionPreRelease(parse("beta")) < VersionPreRelease(parse("beta.2")));
-    assert!(VersionPreRelease(parse("beta.2")) < VersionPreRelease(parse("beta.11")));
-    assert!(VersionPreRelease(parse("beta.11")) < VersionPreRelease(parse("rc.1")));
+    assert!(VersionPreRelease("alpha".to_string()) < VersionPreRelease("alpha.1".to_string()));
+    assert!(VersionPreRelease("alpha.1".to_string()) < VersionPreRelease("alpha.beta".to_string()));
+    assert!(VersionPreRelease("alpha.beta".to_string()) < VersionPreRelease("beta".to_string()));
+    assert!(VersionPreRelease("beta".to_string()) < VersionPreRelease("beta.2".to_string()));
+    assert!(VersionPreRelease("beta.2".to_string()) < VersionPreRelease("beta.11".to_string()));
+    assert!(VersionPreRelease("beta.11".to_string()) < VersionPreRelease("rc.1".to_string()));
 }
 
 impl VersionPreRelease {
@@ -80,7 +78,7 @@ fn test_parse() {
     assert_eq!(Some((None, "+foo")), VersionPreRelease::parse("+foo"));
     assert_eq!(None, VersionPreRelease::parse("-foo.01"));
     assert_eq!(
-        Some((Some(VersionPreRelease(vec!["foo".to_string()])), "")),
+        Some((Some(VersionPreRelease("foo".to_string())), "")),
         VersionPreRelease::parse("-foo")
     );
 }

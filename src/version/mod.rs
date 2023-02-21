@@ -59,29 +59,21 @@ fn test_to_string() {
         "1.2.3-foo",
         Version::new(
             core.clone(),
-            Some(VersionPreRelease(vec!["foo".to_string()])),
+            Some(VersionPreRelease("foo".to_string())),
             None
         )
         .to_string()
     );
     assert_eq!(
         "1.2.3+foo",
-        Version::new(
-            core.clone(),
-            None,
-            Some(VersionBuild(vec!["foo".to_string()]))
-        )
-        .to_string()
+        Version::new(core.clone(), None, Some(VersionBuild("foo".to_string()))).to_string()
     );
     assert_eq!(
         "1.2.3-foo.bar+baz",
         Version::new(
             core,
-            Some(VersionPreRelease(vec![
-                "foo".to_string(),
-                "bar".to_string()
-            ])),
-            Some(VersionBuild(vec!["baz".to_string()]))
+            Some(VersionPreRelease("foo.bar".to_string())),
+            Some(VersionBuild("baz".to_string()))
         )
         .to_string()
     );
@@ -131,7 +123,7 @@ fn test_eq() {
 
     assert_eq!(
         Version::new(core.clone(), None, None),
-        Version::new(core, None, Some(VersionBuild(vec!["foo".to_string()])))
+        Version::new(core, None, Some(VersionBuild("foo".to_string())))
     );
 }
 
