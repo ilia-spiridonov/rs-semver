@@ -1,8 +1,11 @@
 use std::fmt;
 
+pub use bound::RangeBound;
 pub use comparator::RangeComparator;
+pub use matcher::MatchingAlg;
 pub use unit::RangeUnit;
 
+mod bound;
 mod comparator;
 mod matcher;
 mod unit;
