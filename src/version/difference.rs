@@ -48,6 +48,21 @@ impl Version {
 
         Self::new(core, pre_release, None)
     }
+
+    /// Finds the largest difference between two versions.
+    ///
+    /// If their cores are equal, then `pre_release` tags are compared: if they're equal (or both missing), then `None` is returned.
+    /// Otherwise,`PreRelease` is returned (even if only one tag is present).
+    ///
+    /// Otherwise, if both versions don't have pre-release tags, then the normal logic (`Major | Minor | Patch`) applies for the core.
+    /// Or, if there's at least one tag, then the output is `PreMajor | PreMinor | PrePatch`.
+    ///
+    /// In any case, `build` is always ignored.
+    pub fn find_difference(&self, other: &Self) -> Option<VersionDiff> {
+        use VersionDiff::*;
+
+        None
+    }
 }
 
 #[test]
@@ -72,4 +87,27 @@ fn test_to_incremented() {
     assert_eq!("1.2.4-0", test("1.2.3", PreRelease));
     assert_eq!("1.2.3-foo.0", test("1.2.3-foo", PreRelease));
     assert_eq!("1.2.3-0.foo.1.bar", test("1.2.3-0.foo.0.bar", PreRelease));
+}
+
+#[test]
+fn test_find_difference() {
+    use VersionDiff::*;
+
+    let test = |v, w| {
+        Version::from(v)
+            .unwrap()
+            .find_difference(&Version::from(w).unwrap())
+    };
+
+    assert!(matches!(test("1.2.3", "2.3.4"), Some(Major)));
+    assert!(matches!(test("1.2.3", "2.3.4-foo"), Some(PreMajor)));
+    assert!(matches!(test("1.2.3", "1.3.4"), Some(Minor)));
+    assert!(matches!(test("1.2.3", "1.3.4-foo"), Some(PreMinor)));
+    assert!(matches!(test("1.2.3", "1.2.4"), Some(Patch)));
+    assert!(matches!(test("1.2.3", "1.2.4-foo"), Some(PrePatch)));
+    assert!(matches!(test("1.2.3", "1.2.3-foo"), Some(PreRelease)));
+    assert!(matches!(test("1.2.3-foo", "1.2.3-bar"), Some(PreRelease)));
+    assert!(matches!(test("1.2.3", "1.2.3"), None));
+    assert!(matches!(test("1.2.3", "1.2.3+foo"), None));
+    assert!(matches!(test("1.2.3-foo", "1.2.3-foo"), None));
 }
