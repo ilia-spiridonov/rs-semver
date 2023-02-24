@@ -1,5 +1,6 @@
-use super::{Version, VersionCore};
+use super::{Version, VersionCore, VersionPreRelease};
 
+#[derive(Clone, Copy)]
 pub enum VersionDiff {
     Major,
     PreMajor,
@@ -27,13 +28,25 @@ impl Version {
     pub fn to_incremented(&self, diff: VersionDiff) -> Self {
         use VersionDiff::*;
 
-        let (major, minor, patch) = match diff {
-            Major => (self.core.major + 1, 0, 0),
-            Minor => (self.core.major, self.core.minor + 1, 0),
-            Patch => (self.core.major, self.core.minor, self.core.patch + 1),
+        let core = match (diff, self.pre_release.is_some()) {
+            (Major | Minor | Patch, true) => self.core.clone(),
+            (Major | PreMajor, _) => VersionCore::new(self.core.major + 1, 0, 0),
+            (Minor | PreMinor, _) => VersionCore::new(self.core.major, self.core.minor + 1, 0),
+            (Patch | PrePatch, _) | (PreRelease, false) => {
+                VersionCore::new(self.core.major, self.core.minor, self.core.patch + 1)
+            }
+            (PreRelease, true) => self.core.clone(),
         };
 
-        Self::new(VersionCore::new(major, minor, patch), None, None)
+        let pre_release = match (diff, &self.pre_release) {
+            (Major | Minor | Patch, _) => None,
+            (PreMajor | PreMinor | PrePatch, _) | (PreRelease, None) => {
+                Some(VersionPreRelease::default())
+            }
+            (PreRelease, Some(pre)) => Some(pre.to_incremented()),
+        };
+
+        Self::new(core, pre_release, None)
     }
 }
 
@@ -41,9 +54,22 @@ impl Version {
 fn test_to_incremented() {
     use VersionDiff::*;
 
-    let ver = Version::from("1.2.3-foo+bar").unwrap();
+    let test = |v, d| Version::from(v).unwrap().to_incremented(d).to_string();
 
-    assert_eq!(Version::from("2.0.0").unwrap(), ver.to_incremented(Major));
-    assert_eq!(Version::from("1.3.0").unwrap(), ver.to_incremented(Minor));
-    assert_eq!(Version::from("1.2.4").unwrap(), ver.to_incremented(Patch));
+    assert_eq!("2.0.0", test("1.2.3", Major));
+    assert_eq!("1.2.3", test("1.2.3-foo", Major));
+    assert_eq!("2.0.0", test("1.2.3+foo", Major));
+    assert_eq!("1.3.0", test("1.2.3", Minor));
+    assert_eq!("1.2.3", test("1.2.3-foo", Minor));
+    assert_eq!("1.2.4", test("1.2.3", Patch));
+    assert_eq!("1.2.3", test("1.2.3-foo", Patch));
+    assert_eq!("2.0.0-0", test("1.2.3", PreMajor));
+    assert_eq!("2.0.0-0", test("1.2.3-foo", PreMajor));
+    assert_eq!("1.3.0-0", test("1.2.3", PreMinor));
+    assert_eq!("1.3.0-0", test("1.2.3-foo", PreMinor));
+    assert_eq!("1.2.4-0", test("1.2.3", PrePatch));
+    assert_eq!("1.2.4-0", test("1.2.3-foo", PrePatch));
+    assert_eq!("1.2.4-0", test("1.2.3", PreRelease));
+    assert_eq!("1.2.3-foo.0", test("1.2.3-foo", PreRelease));
+    assert_eq!("1.2.3-0.foo.1.bar", test("1.2.3-0.foo.0.bar", PreRelease));
 }

@@ -5,6 +5,12 @@ use super::common::{parse_dot_sep_list, parse_num_id};
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct VersionPreRelease(pub String);
 
+impl Default for VersionPreRelease {
+    fn default() -> Self {
+        Self("0".to_string())
+    }
+}
+
 impl fmt::Display for VersionPreRelease {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "-{}", self.0)
@@ -81,4 +87,24 @@ fn test_parse() {
         Some((Some(VersionPreRelease("foo".to_string())), "")),
         VersionPreRelease::parse("-foo")
     );
+}
+
+impl VersionPreRelease {
+    pub(crate) fn to_incremented(&self) -> Self {
+        let s: &str = &self.0;
+        let dots = s
+            .char_indices()
+            .rev()
+            .filter_map(|(idx, ch)| if ch == '.' { Some(idx) } else { None });
+
+        for dot_idx in dots {
+            if let Some((id, r)) = parse_num_id(&s[dot_idx + 1..]) {
+                if r.is_empty() || r.starts_with('.') {
+                    return Self(format!("{}{}{}", &s[..=dot_idx], id + 1, r));
+                }
+            }
+        }
+
+        Self(format!("{}.0", s))
+    }
 }

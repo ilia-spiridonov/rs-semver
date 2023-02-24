@@ -171,7 +171,7 @@ impl Version {
     /// Attempts to build a semantic version representation from the given slice `s`
     /// using the grammar described on https://semver.org.
     ///
-    /// Note that it deviates from them slightly by allowing the `v` prefix which is commonly used in practice.
+    /// Note that it deviates from it slightly by allowing the `v` prefix which is commonly used in practice.
     ///
     /// If there are any additional (e.g. whitespace) characters around the version, make sure to trim them beforehand.
     pub fn from(s: &str) -> Option<Self> {
