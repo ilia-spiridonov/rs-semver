@@ -119,12 +119,10 @@ impl Ord for Version {
 
 #[test]
 fn test_eq() {
-    let core = VersionCore::new(1, 0, 0);
+    let parse = |s| Version::from(s).expect(s);
 
-    assert_eq!(
-        Version::new(core.clone(), None, None),
-        Version::new(core, None, Some(VersionBuild("foo".to_string())))
-    );
+    assert!(parse("1.2.3") == parse("1.2.3+foo"));
+    assert!(parse("1.2.3+foo") == parse("1.2.3+bar"));
 }
 
 #[test]
@@ -144,8 +142,34 @@ fn test_cmp() {
 }
 
 impl Version {
+    pub fn cmp_with_build(&self, other: &Self) -> cmp::Ordering {
+        match self.cmp(other) {
+            cmp::Ordering::Equal => self.build.cmp(&other.build),
+            ord => ord,
+        }
+    }
+}
+
+#[test]
+fn test_cmp_with_build() {
+    use cmp::Ordering::*;
+
+    let parse = |s| Version::from(s).expect(s);
+
+    assert_eq!(Less, parse("1.2.3-0").cmp_with_build(&parse("1.2.3")));
+    assert_eq!(Greater, parse("1.2.3-1").cmp_with_build(&parse("1.2.3-0")));
+    assert_eq!(Less, parse("1.2.3").cmp_with_build(&parse("1.2.3+foo")));
+    assert_eq!(Less, parse("1.2.3+f").cmp_with_build(&parse("1.2.3+foo")));
+    assert_eq!(
+        Equal,
+        parse("1.2.3+foo").cmp_with_build(&parse("1.2.3+foo"))
+    );
+    assert_eq!(Greater, parse("1.2.3+foo").cmp_with_build(&parse("1.2.3")));
+}
+
+impl Version {
     /// Attempts to build a semantic version representation from the given slice `s`
-    /// using the rules described on https://semver.org.
+    /// using the grammar described on https://semver.org.
     ///
     /// Note that it deviates from them slightly by allowing the `v` prefix which is commonly used in practice.
     ///
