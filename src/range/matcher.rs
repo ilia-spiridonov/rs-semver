@@ -31,11 +31,11 @@ impl RangeBound {
 
 impl RangeUnit {
     fn is_matched_by(&self, alg: MatchingAlg, ver: &Version) -> bool {
-        if let Some(extra_bound) = &self.extra_bound {
-            self.bound.is_matched_by(alg, ver) && extra_bound.is_matched_by(alg, ver)
-        } else {
-            self.bound.is_matched_by(alg, ver)
-        }
+        self.bound.is_matched_by(alg, ver)
+            && self
+                .extra_bound
+                .as_ref()
+                .map_or(true, |b| b.is_matched_by(alg, ver))
     }
 }
 
@@ -68,10 +68,12 @@ fn test_range_unit_is_matched_by_alg_classic() {
     assert!(!test("1.2.3", "<1.2.3"));
     assert!(test("1.2.2", "<1.2.3"));
 
-    assert!(!test("1.2.3-0", ">=1.2.3-1"));
-    assert!(test("1.2.3-1", ">=1.2.3-0"));
-    assert!(test("1.2.3", ">=1.2.3-0"));
-    assert!(test("1.2.4", ">=1.2.3-0"));
+    assert!(!test("1.2.3-0", ">1.2.3-1"));
+    assert!(test("1.2.3-1", ">1.2.3-0"));
+    assert!(!test("1.2.2", ">1.2.3-0"));
+    assert!(test("1.2.3", ">1.2.3-0"));
+    assert!(!test("1.2.3-0", ">1.2.3"));
+    assert!(test("1.2.4-0", ">1.2.3"));
 }
 
 #[test]
@@ -83,8 +85,8 @@ fn test_range_unit_is_matched_by_alg_node() {
             .is_matched_by(MatchingAlg::Node, &Version::from(v).unwrap())
     };
 
-    assert!(!test("1.2.4-0", ">=1.2.3"));
-    assert!(!test("1.2.3-0", ">=1.2.2-0"));
+    assert!(!test("1.2.4-0", ">1.2.3"));
+    assert!(!test("1.2.3-0", ">1.2.2-0"));
 }
 
 impl Range {
