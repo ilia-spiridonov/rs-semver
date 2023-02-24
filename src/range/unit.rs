@@ -1,6 +1,6 @@
 use std::fmt;
 
-use super::super::{Version, VersionIncrement, VersionPattern};
+use super::super::{Version, VersionDiff, VersionPattern};
 use super::comparator::RangeComparator;
 use super::RangeBound;
 
@@ -125,7 +125,7 @@ impl RangeUnit {
     fn from_version(comp: Option<ParsedComparator>, ver: Version) -> Self {
         use ParsedComparator::*;
         use RangeComparator::*;
-        use VersionIncrement::*;
+        use VersionDiff::*;
 
         match comp {
             None => Self::new(RangeBound(Equal, ver), None),

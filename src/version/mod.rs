@@ -2,14 +2,14 @@ use std::{cmp, fmt, hash};
 
 pub use self::core::VersionCore;
 pub use build::VersionBuild;
-pub use increment::VersionIncrement;
+pub use difference::VersionDiff;
 pub use pattern::VersionPattern;
 pub use pre_release::VersionPreRelease;
 
 mod build;
 mod common;
 mod core;
-mod increment;
+mod difference;
 mod pattern;
 mod pre_release;
 
