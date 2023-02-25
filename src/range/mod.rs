@@ -1,14 +1,11 @@
 use std::fmt;
 
-pub use bound::RangeBound;
-pub use comparator::RangeComparator;
-pub use matcher::MatchingAlg;
-pub use unit::RangeUnit;
+use unit::RangeUnit;
 
-mod bound;
-mod comparator;
-mod matcher;
-mod unit;
+pub(crate) mod bound;
+pub(crate) mod comparator;
+pub(crate) mod matcher;
+pub(crate) mod unit;
 
 #[derive(Debug, PartialEq)]
 pub enum Range {

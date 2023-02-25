@@ -1,7 +1,7 @@
 use std::fmt;
 
-use super::super::Version;
-use super::RangeComparator;
+use super::comparator::RangeComparator;
+use crate::version::Version;
 
 #[derive(Debug, PartialEq)]
 pub struct RangeBound(pub RangeComparator, pub Version);

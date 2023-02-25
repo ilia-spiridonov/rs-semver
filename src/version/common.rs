@@ -1,4 +1,4 @@
-pub fn parse_num_id(s: &str) -> Option<(u32, &str)> {
+pub(crate) fn parse_num_id(s: &str) -> Option<(u32, &str)> {
     let cnt = s.chars().take_while(|c| c.is_ascii_digit()).count();
 
     if cnt == 0 || (cnt > 1 && s.starts_with('0')) {
@@ -17,7 +17,7 @@ fn test_parse_num_id() {
     assert_eq!(Some((102, ".")), parse_num_id("102."));
 }
 
-pub fn parse_dot_sep_list(s: &str, check_part: fn(&str) -> bool) -> Option<(String, &str)> {
+pub(crate) fn parse_dot_sep_list(s: &str, check_part: fn(&str) -> bool) -> Option<(String, &str)> {
     let mut r = s;
 
     loop {

@@ -1,7 +1,10 @@
 use std::cmp;
 
-use super::super::Version;
-use super::{Range, RangeBound, RangeComparator, RangeUnit};
+use super::bound::RangeBound;
+use super::comparator::RangeComparator;
+use super::unit::RangeUnit;
+use super::Range;
+use crate::version::Version;
 
 #[derive(Clone, Copy)]
 pub enum MatchingAlg {

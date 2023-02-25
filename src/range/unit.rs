@@ -1,7 +1,11 @@
 use std::fmt;
 
-use super::super::{Version, VersionDiff, VersionPattern, VersionPreRelease};
-use super::{RangeBound, RangeComparator};
+use super::bound::RangeBound;
+use super::comparator::RangeComparator;
+use crate::version::difference::VersionDiff;
+use crate::version::pattern::VersionPattern;
+use crate::version::pre_release::VersionPreRelease;
+use crate::version::Version;
 
 enum ParsedComparator {
     Simple(RangeComparator),
@@ -21,7 +25,7 @@ pub struct RangeUnit {
 }
 
 impl RangeUnit {
-    pub fn new(bound: RangeBound, extra_bound: Option<RangeBound>) -> Self {
+    pub(crate) fn new(bound: RangeBound, extra_bound: Option<RangeBound>) -> Self {
         Self { bound, extra_bound }
     }
 }

@@ -16,7 +16,7 @@ impl fmt::Display for VersionCore {
 }
 
 impl VersionCore {
-    pub fn new(major: u32, minor: u32, patch: u32) -> Self {
+    pub(crate) fn new(major: u32, minor: u32, patch: u32) -> Self {
         Self {
             major,
             minor,

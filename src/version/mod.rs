@@ -1,17 +1,15 @@
 use std::{cmp, fmt, hash};
 
-pub use self::core::VersionCore;
-pub use build::VersionBuild;
-pub use difference::VersionDiff;
-pub use pattern::VersionPattern;
-pub use pre_release::VersionPreRelease;
+use self::core::VersionCore;
+use build::VersionBuild;
+use pre_release::VersionPreRelease;
 
-mod build;
-mod common;
-mod core;
-mod difference;
-mod pattern;
-mod pre_release;
+pub(crate) mod build;
+pub(crate) mod common;
+pub(crate) mod core;
+pub(crate) mod difference;
+pub(crate) mod pattern;
+pub(crate) mod pre_release;
 
 #[derive(Clone, Debug)]
 pub struct Version {
@@ -37,7 +35,7 @@ impl fmt::Display for Version {
 }
 
 impl Version {
-    pub fn new(major: u32, minor: u32, patch: u32) -> Self {
+    pub(crate) fn new(major: u32, minor: u32, patch: u32) -> Self {
         Self {
             core: VersionCore::new(major, minor, patch),
             pre_release: None,
@@ -45,12 +43,13 @@ impl Version {
         }
     }
 
-    pub fn with_pre_release(mut self, pre_release: VersionPreRelease) -> Self {
+    pub(crate) fn with_pre_release(mut self, pre_release: VersionPreRelease) -> Self {
         self.pre_release = Some(pre_release);
         self
     }
 
-    pub fn with_build(mut self, build: VersionBuild) -> Self {
+    #[allow(dead_code)]
+    fn with_build(mut self, build: VersionBuild) -> Self {
         self.build = Some(build);
         self
     }
@@ -143,6 +142,11 @@ fn test_cmp() {
 }
 
 impl Version {
+    /// Compares two versions using an algorithm that takes `build` metadata into account.
+    /// Only applies when these versions are considered equal by the SemVer specification (which ignores `build`).
+    ///
+    /// Build strings are compared lexicographically. If only one version has `build`, then it's considered to be `Greater`.
+    /// If both don't have it, then `Equal` is returned.
     pub fn cmp_with_build(&self, other: &Self) -> cmp::Ordering {
         match self.cmp(other) {
             cmp::Ordering::Equal => self.build.cmp(&other.build),
@@ -158,6 +162,7 @@ fn test_cmp_with_build() {
     let parse = |s| Version::from(s).expect(s);
 
     assert_eq!(Less, parse("1.2.3-0").cmp_with_build(&parse("1.2.3")));
+    assert_eq!(Equal, parse("1.2.3").cmp_with_build(&parse("1.2.3")));
     assert_eq!(Greater, parse("1.2.3-1").cmp_with_build(&parse("1.2.3-0")));
     assert_eq!(Less, parse("1.2.3").cmp_with_build(&parse("1.2.3+foo")));
     assert_eq!(Less, parse("1.2.3+f").cmp_with_build(&parse("1.2.3+foo")));

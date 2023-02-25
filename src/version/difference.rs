@@ -1,4 +1,6 @@
-use super::{Version, VersionCore, VersionPreRelease};
+use super::core::VersionCore;
+use super::pre_release::VersionPreRelease;
+use super::Version;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum VersionDiff {
