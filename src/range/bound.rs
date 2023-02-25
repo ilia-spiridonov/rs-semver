@@ -3,7 +3,7 @@ use std::fmt;
 use super::comparator::RangeComparator;
 use crate::version::Version;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct RangeBound(pub RangeComparator, pub Version);
 
 impl fmt::Display for RangeBound {

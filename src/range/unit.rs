@@ -18,7 +18,7 @@ enum ParsedPart {
     Pattern(VersionPattern),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct RangeUnit {
     pub bound: RangeBound,
     pub extra_bound: Option<RangeBound>,

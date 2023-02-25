@@ -7,7 +7,7 @@ pub(crate) mod comparator;
 pub(crate) mod matcher;
 pub(crate) mod unit;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Range {
     Just(RangeUnit), // allocating for one unit only most of the time would be a waste
     All(Vec<RangeUnit>),
