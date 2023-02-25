@@ -61,7 +61,25 @@ impl Version {
     pub fn find_difference(&self, other: &Self) -> Option<VersionDiff> {
         use VersionDiff::*;
 
-        None
+        if self.core == other.core {
+            return if self.pre_release != other.pre_release {
+                Some(PreRelease)
+            } else {
+                None
+            };
+        }
+
+        let no_tags = self.pre_release.is_none() && other.pre_release.is_none();
+
+        if self.core.major != other.core.major {
+            return Some(if no_tags { Major } else { PreMajor });
+        }
+
+        if self.core.minor != other.core.minor {
+            return Some(if no_tags { Minor } else { PreMinor });
+        }
+
+        Some(if no_tags { Patch } else { PrePatch })
     }
 }
 
