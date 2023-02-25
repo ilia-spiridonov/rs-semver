@@ -49,7 +49,7 @@ impl fmt::Display for Range {
 #[test]
 fn test_to_string() {
     assert_eq!(
-        ">=1.2.3 <2.0.0",
+        ">=1.2.3 <2.0.0-0",
         Range::Just(RangeUnit::parse("^1.2.3").unwrap().0).to_string()
     );
     assert_eq!(
@@ -61,7 +61,7 @@ fn test_to_string() {
         .to_string()
     );
     assert_eq!(
-        ">=1.2.3 <2.0.0 || 4.5.6",
+        ">=1.2.3 <2.0.0-0 || 4.5.6",
         Range::Any(vec![
             vec![RangeUnit::parse("^1.2.3").unwrap().0],
             vec![RangeUnit::parse("4.5.6").unwrap().0],

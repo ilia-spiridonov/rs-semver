@@ -1,7 +1,7 @@
 use std::fmt;
 
 use super::common::parse_num_id;
-use super::{Version, VersionCore};
+use super::Version;
 
 #[derive(Debug, PartialEq)]
 pub enum VersionPattern {
@@ -95,18 +95,14 @@ fn test_parse() {
 impl VersionPattern {
     pub(crate) fn to_bounds(&self) -> (Version, Option<Version>) {
         match self {
-            Self::Major => (Version::new(VersionCore::new(0, 0, 0), None, None), None),
+            Self::Major => (Version::new(0, 0, 0), None),
             Self::Minor(major) => (
-                Version::new(VersionCore::new(*major, 0, 0), None, None),
-                Some(Version::new(VersionCore::new(major + 1, 0, 0), None, None)),
+                Version::new(*major, 0, 0),
+                Some(Version::new(major + 1, 0, 0)),
             ),
             Self::Patch(major, minor) => (
-                Version::new(VersionCore::new(*major, *minor, 0), None, None),
-                Some(Version::new(
-                    VersionCore::new(*major, minor + 1, 0),
-                    None,
-                    None,
-                )),
+                Version::new(*major, *minor, 0),
+                Some(Version::new(*major, minor + 1, 0)),
             ),
         }
     }

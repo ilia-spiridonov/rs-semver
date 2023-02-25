@@ -29,13 +29,12 @@ impl Version {
         use VersionDiff::*;
 
         let core = match (diff, self.pre_release.is_some()) {
-            (Major | Minor | Patch, true) => self.core.clone(),
+            (Major | Minor | Patch, true) | (PreRelease, true) => self.core.clone(),
             (Major | PreMajor, _) => VersionCore::new(self.core.major + 1, 0, 0),
             (Minor | PreMinor, _) => VersionCore::new(self.core.major, self.core.minor + 1, 0),
             (Patch | PrePatch, _) | (PreRelease, false) => {
                 VersionCore::new(self.core.major, self.core.minor, self.core.patch + 1)
             }
-            (PreRelease, true) => self.core.clone(),
         };
 
         let pre_release = match (diff, &self.pre_release) {
@@ -46,7 +45,11 @@ impl Version {
             (PreRelease, Some(pre)) => Some(pre.to_incremented()),
         };
 
-        Self::new(core, pre_release, None)
+        Self {
+            core,
+            pre_release,
+            build: None,
+        }
     }
 
     /// Finds the largest difference between two versions.

@@ -37,49 +37,46 @@ impl fmt::Display for Version {
 }
 
 impl Version {
-    pub fn new(
-        core: VersionCore,
-        pre_release: Option<VersionPreRelease>,
-        build: Option<VersionBuild>,
-    ) -> Self {
+    pub fn new(major: u32, minor: u32, patch: u32) -> Self {
         Self {
-            core,
-            pre_release,
-            build,
+            core: VersionCore::new(major, minor, patch),
+            pre_release: None,
+            build: None,
         }
     }
 
-    pub fn with_core(major: u32, minor: u32, patch: u32) -> Self {
-        Self::new(VersionCore::new(major, minor, patch), None, None)
+    pub fn with_pre_release(mut self, pre_release: VersionPreRelease) -> Self {
+        self.pre_release = Some(pre_release);
+        self
+    }
+
+    pub fn with_build(mut self, build: VersionBuild) -> Self {
+        self.build = Some(build);
+        self
     }
 }
 
 #[test]
 fn test_to_string() {
-    let core = VersionCore::new(1, 2, 3);
-
-    assert_eq!("1.2.3", Version::new(core.clone(), None, None).to_string());
+    assert_eq!("1.2.3", Version::new(1, 2, 3).to_string());
     assert_eq!(
         "1.2.3-foo",
-        Version::new(
-            core.clone(),
-            Some(VersionPreRelease("foo".to_string())),
-            None
-        )
-        .to_string()
+        Version::new(1, 2, 3)
+            .with_pre_release(VersionPreRelease("foo".to_string()))
+            .to_string()
     );
     assert_eq!(
         "1.2.3+foo",
-        Version::new(core.clone(), None, Some(VersionBuild("foo".to_string()))).to_string()
+        Version::new(1, 2, 3)
+            .with_build(VersionBuild("foo".to_string()))
+            .to_string()
     );
     assert_eq!(
         "1.2.3-foo.bar+baz",
-        Version::new(
-            core,
-            Some(VersionPreRelease("foo.bar".to_string())),
-            Some(VersionBuild("baz".to_string()))
-        )
-        .to_string()
+        Version::new(1, 2, 3)
+            .with_pre_release(VersionPreRelease("foo.bar".to_string()))
+            .with_build(VersionBuild("baz".to_string()))
+            .to_string()
     );
 }
 
@@ -172,12 +169,12 @@ fn test_cmp_with_build() {
 }
 
 impl Version {
-    /// Attempts to build a semantic version representation from the given slice `s`
-    /// using the grammar described on https://semver.org.
+    /// Builds a Semantic Version by parsing the slice `s` using the grammar described on https://semver.org.
     ///
     /// Note that it deviates from it slightly by allowing the `v` prefix which is commonly used in practice.
     ///
-    /// If there are any additional (e.g. whitespace) characters around the version, make sure to trim them beforehand.
+    /// If there are any additional (e.g. whitespace) characters around the version string, make sure
+    /// to trim them beforehand, otherwise `None` will be returned.
     pub fn from(s: &str) -> Option<Self> {
         let (ver, r) = Self::parse(s)?;
 
@@ -194,17 +191,21 @@ impl Version {
         let (pre_release, r) = VersionPreRelease::parse(r)?;
         let (build, r) = VersionBuild::parse(r)?;
 
-        Some((Self::new(core, pre_release, build), r))
+        Some((
+            Self {
+                core,
+                pre_release,
+                build,
+            },
+            r,
+        ))
     }
 }
 
 #[test]
 fn test_from() {
     assert_eq!(None, Version::from("1.2.3 "));
-    assert_eq!(
-        Some(Version::new(VersionCore::new(1, 2, 3), None, None)),
-        Version::from("1.2.3")
-    );
+    assert_eq!(Some(Version::new(1, 2, 3)), Version::from("1.2.3"));
 }
 
 #[test]
