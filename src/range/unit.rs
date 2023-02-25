@@ -1,8 +1,7 @@
 use std::fmt;
 
 use super::super::{Version, VersionDiff, VersionPattern};
-use super::comparator::RangeComparator;
-use super::RangeBound;
+use super::{RangeBound, RangeComparator};
 
 enum ParsedComparator {
     Simple(RangeComparator),
@@ -31,25 +30,24 @@ impl fmt::Display for RangeUnit {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let RangeBound(comp, ver) = &self.bound;
 
-        if let Some(RangeBound(ex_comp, ex_ver)) = &self.extra_bound {
-            write!(f, "{}{} {}{}", comp, ver, ex_comp, ex_ver)
+        write!(f, "{}{}", comp, ver)?;
+
+        if let Some(RangeBound(extra_comp, extra_ver)) = &self.extra_bound {
+            write!(f, " {}{}", extra_comp, extra_ver)
         } else {
-            write!(f, "{}{}", comp, ver)
+            Ok(())
         }
     }
 }
 
 #[test]
 fn test_to_string() {
-    use super::super::VersionCore;
-
-    let ver1 = Version::new(VersionCore::new(1, 2, 3), None, None);
-    let ver2 = Version::new(VersionCore::new(4, 5, 6), None, None);
+    use RangeComparator::*;
 
     assert_eq!(
         ">=1.2.3",
         RangeUnit::new(
-            RangeBound(RangeComparator::GreaterOrEqual, ver1.clone()),
+            RangeBound(GreaterOrEqual, Version::with_core(1, 2, 3)),
             None
         )
         .to_string()
@@ -57,8 +55,8 @@ fn test_to_string() {
     assert_eq!(
         "1.2.3 <4.5.6",
         RangeUnit::new(
-            RangeBound(RangeComparator::Equal, ver1),
-            Some(RangeBound(RangeComparator::Less, ver2))
+            RangeBound(Equal, Version::with_core(1, 2, 3)),
+            Some(RangeBound(Less, Version::with_core(4, 5, 6)))
         )
         .to_string()
     );
@@ -132,18 +130,21 @@ impl RangeUnit {
             Some(Simple(comp)) => Self::new(RangeBound(comp, ver), None),
             Some(Tilde) => {
                 let upper = ver.to_incremented(Minor);
+
                 Self::new(
                     RangeBound(GreaterOrEqual, ver),
                     Some(RangeBound(Less, upper)),
                 )
             }
             Some(Caret) => {
-                let inc = match (ver.core.major, ver.core.minor, ver.core.patch) {
+                let diff = match (ver.core.major, ver.core.minor, ver.core.patch) {
                     (0, 0, _) => Patch,
                     (0, _, _) => Minor,
                     (_, _, _) => Major,
                 };
-                let upper = ver.to_incremented(inc);
+
+                let upper = ver.to_incremented(diff);
+
                 Self::new(
                     RangeBound(GreaterOrEqual, ver),
                     Some(RangeBound(Less, upper)),
@@ -170,6 +171,7 @@ impl RangeUnit {
                         Greater => upper,
                         _ => lower,
                     };
+
                     Some(Self::new(RangeBound(GreaterOrEqual, bound), None))
                 }
                 (Equal, (lower, Some(upper))) => Some(Self::new(
@@ -181,6 +183,7 @@ impl RangeUnit {
                         Less => lower,
                         _ => upper,
                     };
+
                     Some(Self::new(RangeBound(Less, bound), None))
                 }
                 _ => None,
@@ -204,6 +207,7 @@ impl RangeUnit {
             ),
             (Version(ver), Pattern(pat)) => {
                 let (_, upper) = pat.to_bounds();
+
                 Self::new(
                     RangeBound(GreaterOrEqual, ver),
                     upper.map(|v| RangeBound(Less, v)),
@@ -211,6 +215,7 @@ impl RangeUnit {
             }
             (Pattern(pat), Version(ver)) => {
                 let (lower, _) = pat.to_bounds();
+
                 Self::new(
                     RangeBound(GreaterOrEqual, lower),
                     Some(RangeBound(LessOrEqual, ver)),
@@ -219,6 +224,7 @@ impl RangeUnit {
             (Pattern(a), Pattern(b)) => {
                 let (lower, _) = a.to_bounds();
                 let (_, upper) = b.to_bounds();
+
                 Self::new(
                     RangeBound(GreaterOrEqual, lower),
                     upper.map(|v| RangeBound(Less, v)),

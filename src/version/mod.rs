@@ -48,6 +48,10 @@ impl Version {
             build,
         }
     }
+
+    pub fn with_core(major: u32, minor: u32, patch: u32) -> Self {
+        Self::new(VersionCore::new(major, minor, patch), None, None)
+    }
 }
 
 #[test]

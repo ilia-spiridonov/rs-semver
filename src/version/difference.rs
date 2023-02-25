@@ -1,6 +1,6 @@
 use super::{Version, VersionCore, VersionPreRelease};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum VersionDiff {
     Major,
     PreMajor,
@@ -72,14 +72,12 @@ impl Version {
         let no_tags = self.pre_release.is_none() && other.pre_release.is_none();
 
         if self.core.major != other.core.major {
-            return Some(if no_tags { Major } else { PreMajor });
+            Some(if no_tags { Major } else { PreMajor })
+        } else if self.core.minor != other.core.minor {
+            Some(if no_tags { Minor } else { PreMinor })
+        } else {
+            Some(if no_tags { Patch } else { PrePatch })
         }
-
-        if self.core.minor != other.core.minor {
-            return Some(if no_tags { Minor } else { PreMinor });
-        }
-
-        Some(if no_tags { Patch } else { PrePatch })
     }
 }
 
@@ -117,15 +115,15 @@ fn test_find_difference() {
             .find_difference(&Version::from(w).unwrap())
     };
 
-    assert!(matches!(test("1.2.3", "2.3.4"), Some(Major)));
-    assert!(matches!(test("1.2.3", "2.3.4-foo"), Some(PreMajor)));
-    assert!(matches!(test("1.2.3", "1.3.4"), Some(Minor)));
-    assert!(matches!(test("1.2.3", "1.3.4-foo"), Some(PreMinor)));
-    assert!(matches!(test("1.2.3", "1.2.4"), Some(Patch)));
-    assert!(matches!(test("1.2.3", "1.2.4-foo"), Some(PrePatch)));
-    assert!(matches!(test("1.2.3", "1.2.3-foo"), Some(PreRelease)));
-    assert!(matches!(test("1.2.3-foo", "1.2.3-bar"), Some(PreRelease)));
-    assert!(matches!(test("1.2.3", "1.2.3"), None));
-    assert!(matches!(test("1.2.3", "1.2.3+foo"), None));
-    assert!(matches!(test("1.2.3-foo", "1.2.3-foo"), None));
+    assert_eq!(Some(Major), test("1.2.3", "2.3.4"));
+    assert_eq!(Some(PreMajor), test("1.2.3", "2.3.4-foo"));
+    assert_eq!(Some(Minor), test("1.2.3", "1.3.4"));
+    assert_eq!(Some(PreMinor), test("1.2.3", "1.3.4-foo"));
+    assert_eq!(Some(Patch), test("1.2.3", "1.2.4"));
+    assert_eq!(Some(PrePatch), test("1.2.3", "1.2.4-foo"));
+    assert_eq!(Some(PreRelease), test("1.2.3", "1.2.3-foo"));
+    assert_eq!(Some(PreRelease), test("1.2.3-foo", "1.2.3-bar"));
+    assert_eq!(None, test("1.2.3", "1.2.3"));
+    assert_eq!(None, test("1.2.3", "1.2.3+foo"));
+    assert_eq!(None, test("1.2.3-foo", "1.2.3-foo"));
 }
