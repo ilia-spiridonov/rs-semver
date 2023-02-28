@@ -4,7 +4,7 @@ use super::comparator::RangeComparator;
 use crate::version::Version;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct RangeBound(pub RangeComparator, pub Version);
+pub(crate) struct RangeBound(pub(crate) RangeComparator, pub(crate) Version);
 
 impl fmt::Display for RangeBound {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

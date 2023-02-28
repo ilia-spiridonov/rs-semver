@@ -1,7 +1,7 @@
 use std::fmt;
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum RangeComparator {
+pub(crate) enum RangeComparator {
     Less,
     LessOrEqual,
     Equal,

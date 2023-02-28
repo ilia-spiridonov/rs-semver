@@ -4,7 +4,7 @@ use super::common::parse_num_id;
 use super::Version;
 
 #[derive(Debug, PartialEq)]
-pub enum VersionPattern {
+pub(crate) enum VersionPattern {
     Major,
     Minor(u32),
     Patch(u32, u32),

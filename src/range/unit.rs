@@ -20,8 +20,8 @@ enum ParsedPart {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct RangeUnit {
-    pub bound: RangeBound,
-    pub extra_bound: Option<RangeBound>,
+    pub(crate) bound: RangeBound,
+    pub(crate) extra_bound: Option<RangeBound>,
 }
 
 impl RangeUnit {
