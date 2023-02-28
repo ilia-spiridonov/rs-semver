@@ -18,6 +18,21 @@ pub struct Version {
     pub build: Option<VersionBuild>,
 }
 
+impl Version {
+    pub(crate) fn new(major: u32, minor: u32, patch: u32) -> Self {
+        Self {
+            core: VersionCore::new(major, minor, patch),
+            pre_release: None,
+            build: None,
+        }
+    }
+
+    pub(crate) fn with_pre_release(mut self, pre_release: VersionPreRelease) -> Self {
+        self.pre_release = Some(pre_release);
+        self
+    }
+}
+
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.core)?;
@@ -34,29 +49,13 @@ impl fmt::Display for Version {
     }
 }
 
-impl Version {
-    pub(crate) fn new(major: u32, minor: u32, patch: u32) -> Self {
-        Self {
-            core: VersionCore::new(major, minor, patch),
-            pre_release: None,
-            build: None,
-        }
-    }
-
-    pub(crate) fn with_pre_release(mut self, pre_release: VersionPreRelease) -> Self {
-        self.pre_release = Some(pre_release);
-        self
-    }
-
-    #[allow(dead_code)]
-    fn with_build(mut self, build: VersionBuild) -> Self {
-        self.build = Some(build);
-        self
-    }
-}
-
 #[test]
 fn test_to_string() {
+    let with_build = |mut v: Version, b| {
+        v.build = Some(b);
+        v
+    };
+
     assert_eq!("1.2.3", Version::new(1, 2, 3).to_string());
     assert_eq!(
         "1.2.3-foo",
@@ -66,16 +65,15 @@ fn test_to_string() {
     );
     assert_eq!(
         "1.2.3+foo",
-        Version::new(1, 2, 3)
-            .with_build(VersionBuild("foo".to_string()))
-            .to_string()
+        with_build(Version::new(1, 2, 3), VersionBuild("foo".to_string())).to_string()
     );
     assert_eq!(
         "1.2.3-foo.bar+baz",
-        Version::new(1, 2, 3)
-            .with_pre_release(VersionPreRelease("foo.bar".to_string()))
-            .with_build(VersionBuild("baz".to_string()))
-            .to_string()
+        with_build(
+            Version::new(1, 2, 3).with_pre_release(VersionPreRelease("foo.bar".to_string())),
+            VersionBuild("baz".to_string())
+        )
+        .to_string()
     );
 }
 

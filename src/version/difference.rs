@@ -53,7 +53,33 @@ impl Version {
             build: None,
         }
     }
+}
 
+#[test]
+fn test_to_incremented() {
+    use VersionDiff::*;
+
+    let test = |v, d| Version::from(v).unwrap().to_incremented(d).to_string();
+
+    assert_eq!("2.0.0", test("1.2.3", Major));
+    assert_eq!("1.2.3", test("1.2.3-foo", Major));
+    assert_eq!("2.0.0", test("1.2.3+foo", Major));
+    assert_eq!("1.3.0", test("1.2.3", Minor));
+    assert_eq!("1.2.3", test("1.2.3-foo", Minor));
+    assert_eq!("1.2.4", test("1.2.3", Patch));
+    assert_eq!("1.2.3", test("1.2.3-foo", Patch));
+    assert_eq!("2.0.0-0", test("1.2.3", PreMajor));
+    assert_eq!("2.0.0-0", test("1.2.3-foo", PreMajor));
+    assert_eq!("1.3.0-0", test("1.2.3", PreMinor));
+    assert_eq!("1.3.0-0", test("1.2.3-foo", PreMinor));
+    assert_eq!("1.2.4-0", test("1.2.3", PrePatch));
+    assert_eq!("1.2.4-0", test("1.2.3-foo", PrePatch));
+    assert_eq!("1.2.4-0", test("1.2.3", PreRelease));
+    assert_eq!("1.2.3-foo.0", test("1.2.3-foo", PreRelease));
+    assert_eq!("1.2.3-0.foo.1.bar", test("1.2.3-0.foo.0.bar", PreRelease));
+}
+
+impl Version {
     /// Finds the largest difference between two versions.
     ///
     /// If their cores are equal, then `pre_release` tags are compared: if they're equal (or both missing), then `None` is returned.
@@ -84,30 +110,6 @@ impl Version {
             Some(if no_tags { Patch } else { PrePatch })
         }
     }
-}
-
-#[test]
-fn test_to_incremented() {
-    use VersionDiff::*;
-
-    let test = |v, d| Version::from(v).unwrap().to_incremented(d).to_string();
-
-    assert_eq!("2.0.0", test("1.2.3", Major));
-    assert_eq!("1.2.3", test("1.2.3-foo", Major));
-    assert_eq!("2.0.0", test("1.2.3+foo", Major));
-    assert_eq!("1.3.0", test("1.2.3", Minor));
-    assert_eq!("1.2.3", test("1.2.3-foo", Minor));
-    assert_eq!("1.2.4", test("1.2.3", Patch));
-    assert_eq!("1.2.3", test("1.2.3-foo", Patch));
-    assert_eq!("2.0.0-0", test("1.2.3", PreMajor));
-    assert_eq!("2.0.0-0", test("1.2.3-foo", PreMajor));
-    assert_eq!("1.3.0-0", test("1.2.3", PreMinor));
-    assert_eq!("1.3.0-0", test("1.2.3-foo", PreMinor));
-    assert_eq!("1.2.4-0", test("1.2.3", PrePatch));
-    assert_eq!("1.2.4-0", test("1.2.3-foo", PrePatch));
-    assert_eq!("1.2.4-0", test("1.2.3", PreRelease));
-    assert_eq!("1.2.3-foo.0", test("1.2.3-foo", PreRelease));
-    assert_eq!("1.2.3-0.foo.1.bar", test("1.2.3-0.foo.0.bar", PreRelease));
 }
 
 #[test]

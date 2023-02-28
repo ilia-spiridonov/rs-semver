@@ -21,6 +21,11 @@ impl fmt::Display for RangeComparator {
     }
 }
 
+#[test]
+fn test_to_string() {
+    assert_eq!(">=", RangeComparator::GreaterOrEqual.to_string());
+}
+
 impl RangeComparator {
     pub(crate) fn parse(s: &str) -> Option<(Self, &str)> {
         let mut ch = s.chars();

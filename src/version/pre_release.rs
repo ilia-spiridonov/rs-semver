@@ -108,3 +108,25 @@ impl VersionPreRelease {
         Self(format!("{}.0", s))
     }
 }
+
+#[test]
+fn test_to_incremented() {
+    assert_eq!(
+        "-foo.0",
+        VersionPreRelease("foo".to_string())
+            .to_incremented()
+            .to_string()
+    );
+    assert_eq!(
+        "-foo.5",
+        VersionPreRelease("foo.4".to_string())
+            .to_incremented()
+            .to_string()
+    );
+    assert_eq!(
+        "-foo.0.bar.2.0baz",
+        VersionPreRelease("foo.0.bar.1.0baz".to_string())
+            .to_incremented()
+            .to_string()
+    )
+}

@@ -9,12 +9,6 @@ pub struct VersionCore {
     pub patch: u32,
 }
 
-impl fmt::Display for VersionCore {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
-    }
-}
-
 impl VersionCore {
     pub(crate) fn new(major: u32, minor: u32, patch: u32) -> Self {
         Self {
@@ -22,6 +16,12 @@ impl VersionCore {
             minor,
             patch,
         }
+    }
+}
+
+impl fmt::Display for VersionCore {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}.{}.{}", self.major, self.minor, self.patch)
     }
 }
 

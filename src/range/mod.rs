@@ -45,25 +45,16 @@ impl fmt::Display for Range {
 
 #[test]
 fn test_to_string() {
-    assert_eq!(
-        ">=1.2.3 <2.0.0-0",
-        Range::Just(RangeUnit::parse("^1.2.3").unwrap().0).to_string()
-    );
+    let parse = |s| RangeUnit::parse(s).expect(s).0;
+
+    assert_eq!(">=1.2.3 <2.0.0-0", Range::Just(parse("^1.2.3")).to_string());
     assert_eq!(
         "1.2.3 4.5.6",
-        Range::All(vec![
-            RangeUnit::parse("1.2.3").unwrap().0,
-            RangeUnit::parse("4.5.6").unwrap().0
-        ])
-        .to_string()
+        Range::All(vec![parse("1.2.3"), parse("4.5.6")]).to_string()
     );
     assert_eq!(
         ">=1.2.3 <2.0.0-0 || 4.5.6",
-        Range::Any(vec![
-            vec![RangeUnit::parse("^1.2.3").unwrap().0],
-            vec![RangeUnit::parse("4.5.6").unwrap().0],
-        ])
-        .to_string()
+        Range::Any(vec![vec![parse("^1.2.3")], vec![parse("4.5.6")],]).to_string()
     );
 }
 

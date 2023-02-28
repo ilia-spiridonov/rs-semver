@@ -107,3 +107,18 @@ impl VersionPattern {
         }
     }
 }
+
+#[test]
+fn test_to_bounds() {
+    use VersionPattern::*;
+
+    assert_eq!((Version::new(0, 0, 0), None), Major.to_bounds());
+    assert_eq!(
+        (Version::new(1, 0, 0), Some(Version::new(2, 0, 0))),
+        Minor(1).to_bounds()
+    );
+    assert_eq!(
+        (Version::new(1, 2, 0), Some(Version::new(1, 3, 0))),
+        Patch(1, 2).to_bounds()
+    );
+}

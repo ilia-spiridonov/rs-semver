@@ -11,3 +11,11 @@ impl fmt::Display for RangeBound {
         write!(f, "{}{}", self.0, self.1)
     }
 }
+
+#[test]
+fn test_to_string() {
+    assert_eq!(
+        "<1.2.3",
+        RangeBound(RangeComparator::Less, Version::new(1, 2, 3)).to_string()
+    );
+}
