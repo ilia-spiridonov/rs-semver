@@ -97,7 +97,7 @@ impl Range {
     ///
     /// When `alg` is `Classic` all version comparisons will strictly follow the SemVer specification.
     ///
-    /// When `alg` is `Node` then `node-semver`'s behaviour will be followed for pre-release versions:
+    /// When `alg` is `Node` then `node-semver`'s behavior will be followed for pre-release versions:
     /// if `ver` has a pre-release tag, then it can only be compared to another version if it
     /// also has a pre-release tag AND the same version core.
     pub fn is_matched_by(&self, alg: MatchingAlg, ver: &Version) -> bool {
