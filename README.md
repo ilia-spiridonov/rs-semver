@@ -33,7 +33,7 @@ Additionally, it's possible to directly compute the difference between any two V
 Finally, incrementing a Version is achieved by passing a `VersionDiff` (e.g. `VersionDiff::Major`) to `Version::to_incremented`. This method may be changed in the near future to perform an in-place mutation instead.
 
 ### Range
-Structure `Range` represents a range of Versions, described using a syntax largely similar to that of `node-semver` (because `rs-semver` was written with the goal of supporting of an implementation of a Node-compatible package manager) but significantly stricter (many ambiguous/meaningless inputs will be rejected).
+Structure `Range` represents a range of Versions, described using a syntax largely similar to that of `node-semver` (`rs-semver` was written with the goal of supporting an implementation of a Node-compatible package manager) but significantly stricter (many ambiguous/meaningless inputs will be rejected).
 
 A `Range` is constructed by parsing a `&str`:
 ```rust
@@ -49,7 +49,7 @@ println!("range: {}", range); // => '>=3.27.1 <4.0.0-0'
 
 To test whether a Version matches a Range use `Range::is_matched_by` with the chosen `MatchingAlg`:
 * `MatchingAlg::Classic` strictly follows the spec when comparing Versions against bounds;
-* `MatchingAlg::Node` follows `node-semver`'s approach: a Version with a pre-release tag is only compared to a bound Version if it also has a tag and their cores are completely equal; in this scheme a Version like `2.3.4-rc.5` does not match a Range like `>=1.2.3-rc.4`, even though this violates the spec.
+* `MatchingAlg::Node` follows `node-semver`'s approach: a Version with a pre-release tag is only compared to a bound Version if it also has a tag and their cores are the same; in this scheme a Version like `2.3.4-rc.5` does not match a Range like `>=1.2.3-rc.4`, even though this violates the spec.
 
 More powerful matching (e.g. overlapping multiple `ranges`) can be easily achieved by composing iterators:
 ```rust
