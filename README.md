@@ -26,11 +26,11 @@ A `Version` consists of three fields (`core`, `pre_release`, and `build`), with 
 
 Versions are comparable (`Eq`, `Ord`) and hash-able (`Hash`) as per the spec.
 Note that this implies that `build` is always ignored.
-If you would like to also sort by build metadata lexicographically consider `Version::cmp_with_build`.
+If you would like to also sort by build metadata lexicographically, consider `Version::cmp_with_build`.
 
 Additionally, it's possible to directly compute the difference between any two Versions via `Version::find_difference`.
 
-Finally, incrementing a Version is achieved by passing a `VersionDiff` (e.g. `VersionDiff::Major`) to `Version::to_incremented`.
+Finally, incrementing a Version is achieved by passing a `VersionDiff` (e.g. `VersionDiff::Major`) to `Version::to_incremented`. This method may be changed in the near future to perform an in-place mutation instead.
 
 ### Range
 Structure `Range` represents a range of Versions, described using a syntax largely similar to that of `node-semver` (because `rs-semver` was written with the goal of supporting of an implementation of a Node-compatible package manager) but significantly stricter (many ambiguous/meaningless inputs will be rejected).
@@ -50,3 +50,17 @@ println!("range: {}", range); // => '>=3.27.1 <4.0.0-0'
 To test whether a Version matches a Range use `Range::is_matched_by` with the chosen `MatchingAlg`:
 * `MatchingAlg::Classic` strictly follows the spec when comparing Versions against bounds;
 * `MatchingAlg::Node` follows `node-semver`'s approach: a Version with a pre-release tag is only compared to a bound Version if it also has a tag and their cores are completely equal; in this scheme a Version like `2.3.4-rc.5` does not match a Range like `>=1.2.3-rc.4`, even though this violates the spec.
+
+More powerful matching (e.g. overlapping multiple `ranges`) can be easily achieved by composing iterators:
+```rust
+fn highest_matching_version<'a>(versions: &'a [Version], ranges: &[Range]) -> Option<&'a Version> {
+    versions
+        .iter()
+        .filter(|ver| {
+            ranges
+                .iter()
+                .all(|range| range.is_matched_by(MatchingAlg::Node, ver))
+        })
+        .max()
+}
+```
