@@ -6,7 +6,7 @@ use super::unit::RangeUnit;
 use super::Range;
 use crate::version::Version;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum MatchingAlg {
     Classic,
     Node,
@@ -16,7 +16,7 @@ impl RangeBound {
     fn is_matched_by(&self, alg: MatchingAlg, ver: &Version) -> bool {
         use RangeComparator::*;
 
-        if matches!(alg, MatchingAlg::Node)
+        if alg == MatchingAlg::Node
             && ver.pre_release.is_some()
             && (self.1.pre_release.is_none() || self.1.core != ver.core)
         {
